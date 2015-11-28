@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/DbConnection.iml" filepath="$PROJECT_DIR$/.idea/DbConnection.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/dbaccess.iml" filepath="$PROJECT_DIR$/.idea/dbaccess.iml" />
     </modules>
   </component>
 </project>
