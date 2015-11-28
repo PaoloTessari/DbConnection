@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="test" type="meteor-app-runner" factoryName="Meteor" editBeforeRun="true" programParameters="test-packages --settings settings.json" workingDirectory="$PROJECT_DIR$/../../Tests/dbConnectionTest">
+  <configuration default="false" name="test" type="meteor-app-runner" factoryName="Meteor" editBeforeRun="true" programParameters="test-packages --settings settings.json" workingDirectory="$USER_HOME$/Tests/dbConnectionTest">
     <option name="exePath" value="/usr/local/bin/meteor" />
     <option name="name" value="test" />
     <option name="startBrowserSettings">
