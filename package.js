@@ -30,8 +30,7 @@ Package.onUse(function(api) {
 
 Package.onTest(function(api) {
   api.use("ecmascript");
-  api.use("tinytest",["client","server"]);
+  //api.use("tinytest",["client","server"]);
   api.use("link:dbaccess", ["server"]);
-  api.addFiles("test/dbconnection-tests.js", ["client","server"]);
   //api.addAssets("test/server/settings.json", ["client"]);
 });
