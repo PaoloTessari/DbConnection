@@ -23,14 +23,16 @@ Npm.depends({
 Package.onUse(function(api) {
   api.versionsFrom("1.2.1");
   api.use("ecmascript");
-  api.addFiles("lib/dbConnection.js");
+    //api.addFiles("lib/dbConnection.js");
   api.export("MongoConnection", ["server"]);
   api.export("SequelizeConnection", ["server"]);
 });
 
 Package.onTest(function(api) {
   api.use("ecmascript");
-  //api.use("tinytest",["client","server"]);
+  api.use("tinytest",["client","server"]);
   api.use("link:dbaccess", ["server"]);
+    api.add_files('lib/dbConnection.js', ["server"]);
+  api.add_files('./Test.js', ["server"]);
   //api.addAssets("test/server/settings.json", ["client"]);
 });
