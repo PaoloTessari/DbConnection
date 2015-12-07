@@ -17,6 +17,8 @@ Npm.depends({
     "mongodb": "2.0.48",
     "sequelize": "3.14.1",
     "tedious": "1.13.1",
+    "pg": "4.4.3",
+    "pg-hstore": "2.3.2",
     "mongo-oplog": "1.0.1"
 });
 

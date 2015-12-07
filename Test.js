@@ -6,18 +6,15 @@ Tinytest.add('MongoConnection', function (test) {
     //var self = this;
     var result = false;
     var mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
-    mongoConn.open(function(err) {
-        if (err) {
-            console.log('MongoConnection. open fail');
-            result = false;
-        }
-        else {
 
-            console.log('MongoConnection.open success');
-            result = true;
-
-        }
+    mongoConn.open(function (err) {
+        Result(err, "mongoConn.open()");
         test.equal(err, false);
+
+        mongoConn.close(function(err) {
+            Result(err, "mongoConn.close()");
+
+        })
     });
 
 
@@ -27,18 +24,21 @@ Tinytest.add('MongoConnection', function (test) {
 Tinytest.add('SequelizeConnection', function (test) {
 
 
-    var sqlConn = new SequelizeConnection(Meteor.settings.DbConnections['LINK01']);
+    var sqlConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
     var self = this;
     sqlConn.open(function (err) {
-        if (err) {
-            console.log('SequelizeConnection.open fail');
-
-        }
-
-        else
-          console.log('SequelizeConnection.open success');
-
+        Result(err, "SequelizeConnection.open()");
         test.equal(err, false);
 
+        sqlConn.close(function(err) {
+            Result(err, "SequelizeConnection.close()");
+
+        })
     });
 });
+
+
+var Result = function(error, msg) {
+    console.log("Error "+error+ " msg "+msg);
+
+}
