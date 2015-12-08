@@ -20,7 +20,8 @@ Npm.depends({
     "pg": "4.4.3",
     "pg-hstore": "2.3.2",
     "mongo-oplog": "1.0.1",
-    "fibers": "1.0.5"
+    //"fibers": "1.0.5",
+    "future": "2.3.1"
 });
 
 Package.onUse(function(api) {

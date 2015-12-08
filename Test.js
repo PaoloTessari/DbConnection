@@ -4,33 +4,45 @@ var Fiber = Npm.require('fibers');
 
 }
 
+var t = {};
+
+t.MongoConnection = Meteor.wrapAsync(TestMongoConnection)
+
 /**
  * Created by paolo on 06/12/15.
  */
-Tinytest.add('MongoConnection', function (test) {
-    Fiber(function () {
+Tinytest.addAsync('MongoConnection', function (test, next) {
+
+    t.MongoConnection(test,next);
 
 
-        //var self = this;
-        var result = false;
-        var mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
 
-        mongoConn.open(function (err) {
-            //Log(err, "mongoConn.open()");
-            test.equal(err, false);
-/*
-            mongoConn.close(function (err) {
-                Result(err, "mongoConn.close()");
-
-            })
-            */
-        });
-        //next();
-
-
-    }).run();
 });
 
+function TestMongoConnection(test,next) {
+//var self = this;
+    var result = false;
+    var mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
+
+    mongoConn.open(Meteor.bindEnvironment(function (err) {
+        //Log(err, "mongoConn.open()");
+        test.equal(err, false);
+        /*
+         mongoConn.close(function (err) {
+         Result(err, "mongoConn.close()");
+
+         })
+         */
+            next();
+
+    })
+)
+
+}
+//next();
+
+
+/*
 Tinytest.add('SequelizeConnection', function (test) {
     Fiber(function () {
 
@@ -67,3 +79,4 @@ Tinytest.add('DocsDef', function (test) {
 
 });
 
+*/
