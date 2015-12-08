@@ -19,22 +19,26 @@ Npm.depends({
     "tedious": "1.13.1",
     "pg": "4.4.3",
     "pg-hstore": "2.3.2",
-    "mongo-oplog": "1.0.1"
+    "mongo-oplog": "1.0.1",
+    "fibers": "1.0.5"
 });
 
 Package.onUse(function(api) {
   api.versionsFrom("1.2.1");
   api.use("ecmascript");
+    api.use("jquery", "server");
     //api.addFiles("lib/dbConnection.js");
   api.export("MongoConnection", ["server"]);
   api.export("SequelizeConnection", ["server"]);
+    api.export("DocsDef", ["server"]);
 });
 
 Package.onTest(function(api) {
   api.use("ecmascript");
   api.use("tinytest",["client","server"]);
   api.use("link:dbaccess", ["server"]);
-    api.add_files('lib/dbConnection.js', ["server"]);
+  api.add_files('lib/dbConnection.js', ["server"]);
+    api.add_files('lib/dbDocDef.js', ["server"]);
   api.add_files('./Test.js', ["server"]);
   //api.addAssets("test/server/settings.json", ["client"]);
 });
