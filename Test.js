@@ -1,68 +1,76 @@
-var Fiber = Npm.require('fibers');
+var Future = Npm.require('fibers/future');
  Log = function(error, msg) {
     console.log("Error "+error+ " msg "+msg);
 
 }
 
-var t = {};
+//var t = {};
 
-t.MongoConnection = Meteor.wrapAsync(TestMongoConnection)
+//t.MongoConnection = Meteor.wrapAsync(TestMongoConnection)
 
 /**
  * Created by paolo on 06/12/15.
  */
 Tinytest.addAsync('MongoConnection', function (test, next) {
 
-    t.MongoConnection(test,next);
+    var err = TestMongoConnection().wait();
+    test.equal(err, false);
+    next();
 
 
 
 });
-
-function TestMongoConnection(test,next) {
-//var self = this;
-    var result = false;
-    var mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
-
-    mongoConn.open(Meteor.bindEnvironment(function (err) {
-        //Log(err, "mongoConn.open()");
-        test.equal(err, false);
-        /*
-         mongoConn.close(function (err) {
-         Result(err, "mongoConn.close()");
-
-         })
-         */
-            next();
-
-    })
-)
-
-}
-//next();
-
 
 /*
-Tinytest.add('SequelizeConnection', function (test) {
-    Fiber(function () {
+Tinytest.addAsync('SequelizeConnection', function (test, next) {
 
-
-        var sqlConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
-        var self = this;
-        sqlConn.open(function (err) {
-            //Log(err, "SequelizeConnection.open()");
-            test.equal(err, false);
-
-            sqlConn.close(function (err) {
-                Result(err, "SequelizeConnection.close()");
-
-            })
-        });
-        //next();
-
-    }).run();
+    var err = TestSequelizeConnection();
+    test.equal(err, false);
+    next();
 });
+*/
 
+var TestMongoConnection = function TestMongoConnection() {
+
+
+    var mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
+
+    return mongoConn.open().wait();
+
+}.future();
+/*
+function TestMongoConnection() {
+//var self = this;
+    var future = new Future();
+
+
+    var mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
+
+    mongoConn.open(function (err) {
+
+        future.return( err );
+
+    })
+    return future.wait();
+
+
+}
+*/
+
+function TestSequelizeConnection () {
+
+    var future = new Future();
+
+
+    var sqlConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
+    sqlConn.open(function (err) {
+        future.return( err );
+
+    })
+    return future.wait();
+}
+
+/*
 Tinytest.add('DocsDef', function (test) {
 
     Fiber(function () {
