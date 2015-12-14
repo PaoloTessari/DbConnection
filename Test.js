@@ -14,33 +14,36 @@ var seqConn = null;
 /**
  * Created by paolo on 06/12/15.
  */
-Tinytest.addAsync('MongoConnectionOpen', function (test, next) {
+Tinytest.add('MongoConnectionOpen', function (test) {
 
     mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
-    var err =  mongoConn.open().wait();
-    test.equal(err,false);
-    next();
+    test.equal( mongoConn.open().wait(), false);
 
 });
 
 
-Tinytest.addAsync('MongoConnectionClose', function (test, next) {
+Tinytest.add('MongoConnectionClose', function (test) {
 
     if(mongoConn != null) {
-        var err = mongoConn.close().wait();
-        test.equal(err, false);
+        test.equal(mongoConn.close().wait(), false);
     }
-    next();
 });
 
 
-Tinytest.addAsync('SequelizeConnectionOpen', function (test, next) {
+Tinytest.add('SequelizeConnectionOpen', function (test) {
 
    seqConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
-   var err = seqConn.open().wait();
-   test.equal(err,false);
-    next();
+    //test.length(seqConn.open().wait(), 1);
+
+    test.equal( Meteor.wrapAsync(seqConn.open()), false);
+
+   /*seqConn.open(function(err) {
+       test.equal(err, false);
+   });
+    //next();
+    */
 });
+
 
 
 
