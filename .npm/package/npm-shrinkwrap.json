@@ -8,6 +8,9 @@
         }
       }
     },
+    "async": {
+      "version": "1.5.0"
+    },
     "future": {
       "version": "2.3.1"
     },
@@ -146,22 +149,22 @@
       }
     },
     "sequelize": {
-      "version": "3.14.1",
+      "version": "3.14.2",
       "dependencies": {
         "bluebird": {
-          "version": "3.0.5"
+          "version": "3.0.6"
         },
         "depd": {
           "version": "1.1.0"
         },
         "dottie": {
-          "version": "1.1.0"
+          "version": "1.1.1"
         },
         "generic-pool": {
           "version": "2.2.1"
         },
         "inflection": {
-          "version": "1.7.2"
+          "version": "1.8.0"
         },
         "lodash": {
           "version": "3.10.1"
@@ -185,7 +188,7 @@
           "version": "1.0.1"
         },
         "validator": {
-          "version": "4.3.0"
+          "version": "4.4.0"
         },
         "wellknown": {
           "version": "0.4.0",
@@ -209,7 +212,7 @@
                       "version": "0.0.1"
                     },
                     "process-nextick-args": {
-                      "version": "1.0.3"
+                      "version": "1.0.6"
                     },
                     "string_decoder": {
                       "version": "0.10.31"

@@ -30,15 +30,23 @@ Tinytest.add('MongoConnectionClose', function (test) {
 });
 
 
-Tinytest.add('SequelizeConnectionOpen', function (test) {
+Tinytest.addAsync('SequelizeConnectionOpen', function (test) {
 
-   seqConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
-    //test.length(seqConn.open().wait(), 1);
-
-    test.equal( Meteor.wrapAsync(seqConn.open()), false);
+      var f = function(seqConn) {
+        return new Promise(function (fulfill, reject){
+            seqConn.open( function(err) {
+                if (err) reject(err);
+                else fulfill(err);
+            });
+        });
+    }
+    seqConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
+    f(seqConn).then(function(err) {
+        test.equal(err,false);
+    });
 
    /*seqConn.open(function(err) {
-       test.equal(err, false);
+       C
    });
     //next();
     */

@@ -15,13 +15,14 @@ Package.describe({
 Npm.depends({
     "asserts" : "4.0.2",
     "mongodb": "2.0.48",
-    "sequelize": "3.14.1",
+    "sequelize": "3.14.2",
     "tedious": "1.13.1",
     "pg": "4.4.3",
     "pg-hstore": "2.3.2",
     "mongo-oplog": "1.0.1",
     //"fibers": "1.0.5",
-    "future": "2.3.1"
+    "future": "2.3.1",
+    "async" : "1.5.0"
 });
 
 Package.onUse(function(api) {
@@ -31,7 +32,7 @@ Package.onUse(function(api) {
     //api.addFiles("lib/dbConnection.js");
   api.export("MongoConnection", ["server"]);
   api.export("SequelizeConnection", ["server"]);
-    api.export("DocsDef", ["server"]);
+  api.export("DocsDef", ["server"]);
 });
 
 Package.onTest(function(api) {
@@ -39,7 +40,7 @@ Package.onTest(function(api) {
   api.use("tinytest",["client","server"]);
   api.use("link:dbaccess", ["server"]);
   api.add_files('lib/dbConnection.js', ["server"]);
-    api.add_files('lib/dbDocDef.js', ["server"]);
+  api.add_files('lib/dbDocDef.js', ["server"]);
   api.add_files('./Test.js', ["server"]);
   //api.addAssets("test/server/settings.json", ["client"]);
 });
