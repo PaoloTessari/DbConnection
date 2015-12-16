@@ -62,5 +62,13 @@ Tinytest.add('SequelizeConnectionClose', function (test) {
 });
 
 
+Tinytest.add('DocsDef.getFieldAttr', function (test) {
+
+    var docsDef = new DocsDef(Meteor.settings.Def);
+    var attr = docsDef.getFieldAttr('doc', '_id');
+    test.isNotNull(attr, attr);
+});
+
+
 
 

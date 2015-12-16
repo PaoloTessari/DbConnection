@@ -21,14 +21,14 @@ Npm.depends({
     "pg-hstore": "2.3.2",
     "mongo-oplog": "1.0.1",
     //"fibers": "1.0.5",
-    "future": "2.3.1",
-    "async" : "1.5.0"
+    "future": "2.3.1"
+    //"async" : "1.5.0"
 });
 
 Package.onUse(function(api) {
   api.versionsFrom("1.2.1");
   api.use("ecmascript");
-    api.use("jquery", "server");
+  api.use("underscore", "server");
     //api.addFiles("lib/dbConnection.js");
   api.export("MongoConnection", ["server"]);
   api.export("SequelizeConnection", ["server"]);
@@ -37,6 +37,7 @@ Package.onUse(function(api) {
 
 Package.onTest(function(api) {
   api.use("ecmascript");
+  api.use("underscore", "server");
   api.use("tinytest",["client","server"]);
   api.use("link:dbaccess", ["server"]);
   api.add_files('lib/dbConnection.js', ["server"]);
