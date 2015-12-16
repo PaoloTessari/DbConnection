@@ -30,8 +30,8 @@ Tinytest.add('MongoConnectionClose', function (test) {
 });
 
 
-Tinytest.addAsync('SequelizeConnectionOpen', function (test) {
-
+Tinytest.add('SequelizeConnectionOpen', function (test) {
+/*
       var f = function(seqConn) {
         return new Promise(function (fulfill, reject){
             seqConn.open( function(err) {
@@ -50,6 +50,15 @@ Tinytest.addAsync('SequelizeConnectionOpen', function (test) {
    });
     //next();
     */
+    seqConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
+
+    test.equal(seqConn.open().wait(), false);
+});
+
+
+Tinytest.add('SequelizeConnectionClose', function (test) {
+
+    test.equal(seqConn.close(), false);
 });
 
 
