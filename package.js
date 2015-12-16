@@ -30,9 +30,10 @@ Package.onUse(function(api) {
   api.use("ecmascript");
   api.use("underscore", "server");
     //api.addFiles("lib/dbConnection.js");
+    api.export("DbConnectionManager", ["server"]);
   api.export("MongoConnection", ["server"]);
   api.export("SequelizeConnection", ["server"]);
-  api.export("DocsDef", ["server"]);
+  api.export("DbDef", ["server"]);
 });
 
 Package.onTest(function(api) {

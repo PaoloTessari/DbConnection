@@ -8,9 +8,6 @@
         }
       }
     },
-    "async": {
-      "version": "1.5.0"
-    },
     "future": {
       "version": "2.3.1"
     },

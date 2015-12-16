@@ -8,29 +8,33 @@ var Future = Npm.require('fibers/future');
 
 //t.MongoConnection = Meteor.wrapAsync(TestMongoConnection)
 
-var mongoConn = null;
-var seqConn = null;
+var connManager = new DbConnectionManager(Meteor.settings.DbConnections);
 
 /**
  * Created by paolo on 06/12/15.
  */
 Tinytest.add('MongoConnectionOpen', function (test) {
-
+/*
     mongoConn = new MongoConnection(Meteor.settings.DbConnections['TEX']);
     test.equal( mongoConn.open().wait(), false);
+*/
+    test.isNotNull(connManager.open('TEX').wait());
 
 });
 
 
 Tinytest.add('MongoConnectionClose', function (test) {
-
+/*
     if(mongoConn != null) {
         test.equal(mongoConn.close().wait(), false);
     }
+    connManager.add('TEX');
+*/
+    //test.equal(connManager.remove('TEX'), false);
 });
 
 
-Tinytest.add('SequelizeConnectionOpen', function (test) {
+Tinytest.add('PostgresConnectionOpen', function (test) {
 /*
       var f = function(seqConn) {
         return new Promise(function (fulfill, reject){
@@ -50,7 +54,7 @@ Tinytest.add('SequelizeConnectionOpen', function (test) {
    });
     //next();
     */
-    seqConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
+    seqConn = new SequelizeConnection(Meteor.settings.DbConnections['POSTGRES']);
 
     test.equal(seqConn.open().wait(), false);
 });
@@ -62,11 +66,12 @@ Tinytest.add('SequelizeConnectionClose', function (test) {
 });
 
 
-Tinytest.add('DocsDef.getFieldAttr', function (test) {
+Tinytest.add('DbDef', function (test) {
 
-    var docsDef = new DocsDef(Meteor.settings.Def);
-    var attr = docsDef.getFieldAttr('doc', '_id');
-    test.isNotNull(attr, attr);
+    var dbDef = new DbDef(Meteor.settings.Def);
+    var fields = dbDef.getCollection('doc');
+    console.log(fields);
+    test.isNotNull(fields);
 });
 
 
