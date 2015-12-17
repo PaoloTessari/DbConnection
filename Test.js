@@ -30,11 +30,11 @@ Tinytest.add('MongoConnectionClose', function (test) {
     }
     connManager.add('TEX');
 */
-    //test.equal(connManager.remove('TEX'), false);
+    test.equal(connManager.close('TEX'), false);
 });
 
 
-Tinytest.add('PostgresConnectionOpen', function (test) {
+Tinytest.add('SqlConnectionOpen', function (test) {
 /*
       var f = function(seqConn) {
         return new Promise(function (fulfill, reject){
@@ -54,15 +54,17 @@ Tinytest.add('PostgresConnectionOpen', function (test) {
    });
     //next();
     */
-    seqConn = new SequelizeConnection(Meteor.settings.DbConnections['POSTGRES']);
-
-    test.equal(seqConn.open().wait(), false);
+    test.isNotNull(connManager.open('POSTGRES').wait());
+    test.isNotNull(connManager.open('MSSQL').wait());
 });
 
 
 Tinytest.add('SequelizeConnectionClose', function (test) {
 
-    test.equal(seqConn.close(), false);
+    //test.equal(seqConn.close(), false);
+    test.equal(connManager.close('POSTGRES'), false);
+    test.equal(connManager.close('MSSQL'), false);
+
 });
 
 
