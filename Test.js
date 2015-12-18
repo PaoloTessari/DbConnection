@@ -30,11 +30,11 @@ Tinytest.add('MongoConnectionClose', function (test) {
     }
     connManager.add('TEX');
 */
-    test.equal(connManager.close('TEX'), false);
+    test.equal(connManager.close('TEX').wait(), false);
 });
 
 
-Tinytest.add('SqlConnectionOpen', function (test) {
+Tinytest.add('POSTGRESConnectionOpen', function (test) {
 /*
       var f = function(seqConn) {
         return new Promise(function (fulfill, reject){
@@ -55,15 +55,43 @@ Tinytest.add('SqlConnectionOpen', function (test) {
     //next();
     */
     test.isNotNull(connManager.open('POSTGRES').wait());
+});
+
+Tinytest.add('MSSQLConnectionOpen', function (test) {
+    /*
+     var f = function(seqConn) {
+     return new Promise(function (fulfill, reject){
+     seqConn.open( function(err) {
+     if (err) reject(err);
+     else fulfill(err);
+     });
+     });
+     }
+     seqConn = new SequelizeConnection(Meteor.settings.DbConnections['PLMSQL']);
+     f(seqConn).then(function(err) {
+     test.equal(err,false);
+     });
+
+     /*seqConn.open(function(err) {
+     C
+     });
+     //next();
+     */
     test.isNotNull(connManager.open('MSSQL').wait());
 });
 
 
-Tinytest.add('SequelizeConnectionClose', function (test) {
+
+Tinytest.add('POSTGRESConnectionClose', function (test) {
 
     //test.equal(seqConn.close(), false);
-    test.equal(connManager.close('POSTGRES'), false);
-    test.equal(connManager.close('MSSQL'), false);
+    test.equal(connManager.close('POSTGRES').wait(), false);
+
+});
+
+Tinytest.add('MSSQLConnectionClose', function (test) {
+
+    test.equal(connManager.close('MSSQL').wait(), false);
 
 });
 
