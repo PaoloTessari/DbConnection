@@ -30,7 +30,9 @@ Package.onUse(function(api) {
   api.use("ecmascript");
   api.use("underscore", "server");
     //api.addFiles("lib/dbConnection.js");
-    api.export("DbConnectionManager", ["server"]);
+  api.export("DbConnectionManager", ["server"]);
+  api.export("SqlCommandManager", ["server"]);
+  api.export("SequelizeCommand", ["server"]);
   api.export("MongoConnection", ["server"]);
   api.export("SequelizeConnection", ["server"]);
   api.export("DbDef", ["server"]);
@@ -39,9 +41,12 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use("ecmascript");
   api.use("underscore", "server");
-  api.use("tinytest",["client","server"]);
+  api.use("tinytest",["server"]);
   api.use("link:dbaccess", ["server"]);
   api.add_files('lib/dbConnection.js', ["server"]);
+    api.add_files('lib/dbConnectionManager.js', ["server"]);
+  api.add_files('lib/dbCommandManager.js', ["server"]);
+    api.add_files('lib/dbCommand.js', ["server"]);
   api.add_files('lib/dbDocDef.js', ["server"]);
   api.add_files('./Test.js', ["server"]);
   //api.addAssets("test/server/settings.json", ["client"]);
