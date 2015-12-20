@@ -22,6 +22,29 @@ Tinytest.add('MongoConnectionOpen', function (test) {
 
 });
 
+Tinytest.add('MongoConnectionFind', function (test) {
+
+  var fetch = function(name) {
+      var future = new Future();
+      try {
+          var conn = connManager.getConnection("TEX").wait();
+          var coll = conn.dbInstance.collection("doc");
+          var recs = coll.find({}).toArray(function (err, docs) {
+
+              console.log(docs);
+              future.return(false);
+          })
+      }
+      catch(e) {
+          console.log(e);
+          future.return(true);
+
+      }
+      return future.wait();
+   }.future();
+
+   test.equal(false, fetch().wait());
+});
 
 Tinytest.add('MongoConnectionClose', function (test) {
 /*
@@ -54,7 +77,7 @@ Tinytest.add('POSTGRESConnectionOpen', function (test) {
    });
     //next();
     */
-    test.isNotNull(connManager.open('POSTGRES').wait());
+    test.equal(connManager.open('POSTGRES').wait(),false);
 });
 
 Tinytest.add('MSSQLConnectionOpen', function (test) {
@@ -77,7 +100,7 @@ Tinytest.add('MSSQLConnectionOpen', function (test) {
      });
      //next();
      */
-    test.isNotNull(connManager.open('MSSQL').wait());
+    test.equal(connManager.open('MSSQL').wait(),false);
 });
 
 
@@ -99,7 +122,7 @@ Tinytest.add('MSSQLConnectionClose', function (test) {
 Tinytest.add('DbDef', function (test) {
 
     var dbDef = new DbDef(Meteor.settings.Def);
-    var fields = dbDef.getCollection('doc');
+    var fields = dbDef.getFields('doc');
     console.log(fields);
     test.isNotNull(fields);
 });
