@@ -17,9 +17,11 @@ var sequelizeCommandManager = new SequelizeCommandManager(dbDef);
  */
 Tinytest.add('MongoConnectionOpen', function (test) {
 
-    connOpen =  Meteor.wrapAsync(connManager.open);
-    test.isNotNull(connOpen('TEX',connManager));
     //test.isNotNull(connManager.open('TEX').wait());
+    Meteor.call('dbOpen','TEST', function(err, response) {
+        test.equal(response, false, err);
+    });
+
 
 });
 /*
@@ -51,30 +53,25 @@ Tinytest.add('MongoConnectionFind', function (test) {
 
 Tinytest.add('MongoConnectionClose', function (test) {
 
-    connClose =  Meteor.wrapAsync(connManager.close);
-    test.equal(connClose('TEX',connManager), false);
+    test.isNotNull(connManager.close('TEX').wait());
+
 });
 
 
 Tinytest.add('POSTGRESConnectionOpen', function (test) {
 
-    connMgr =  Meteor.wrapAsync(connManager.open);
-    test.isNotNull(connMgr('POSTGRES',connManager));
-    //test.equal(connManager.open('POSTGRES').wait(),false);
+    test.equal(connManager.open('POSTGRES').wait(),false);
 });
 
 Tinytest.add('MSSQLConnectionOpen', function (test) {
-    connMgr =  Meteor.wrapAsync(connManager.open);
-    test.isNotNull(connMgr('MSSQL',connManager))
 
-    //test.equal(connManager.open('MSSQL').wait(),false);
+ test.equal(connManager.open('MSSQL').wait(),false);
 });
 
 
-/*
+
 Tinytest.add('POSTGRESConnectionClose', function (test) {
 
-    //test.equal(seqConn.close(), false);
     test.equal(connManager.close('POSTGRES').wait(), false);
 
 });
@@ -84,7 +81,7 @@ Tinytest.add('MSSQLConnectionClose', function (test) {
     test.equal(connManager.close('MSSQL').wait(), false);
 
 });
-*/
+
 
 Tinytest.add('DbDef', function (test) {
 

@@ -1,6 +1,6 @@
 Package.describe({
   name: "link:dbaccess",
-  version: "0.9.1",
+  version: "1.0.2",
   // Brief, one-line summary of the package.
   summary: "",
   // URL to the Git repository containing the source code for this package.
@@ -29,6 +29,7 @@ Package.onUse(function(api) {
   api.versionsFrom("1.2.1");
   api.use("ecmascript");
   api.use("underscore", "server");
+  api.use("iron:router", "server");
     //api.addFiles("lib/dbConnection.js");
   api.export("DbConnectionManager", ["server"]);
   api.export("SqlCommandManager", ["server"]);
