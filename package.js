@@ -1,6 +1,6 @@
 Package.describe({
   name: "link:dbaccess",
-  version: "1.0.2",
+  version: "1.0.5",
   // Brief, one-line summary of the package.
   summary: "",
   // URL to the Git repository containing the source code for this package.
@@ -29,7 +29,8 @@ Package.onUse(function(api) {
   api.versionsFrom("1.2.1");
   api.use("ecmascript");
   api.use("underscore", "server");
-  api.use("iron:router", "server");
+  api.use('nimble:restivus');
+  //api.use("iron:router@1.0.12");
     //api.addFiles("lib/dbConnection.js");
   api.export("DbConnectionManager", ["server"]);
   api.export("SqlCommandManager", ["server"]);
@@ -43,12 +44,14 @@ Package.onTest(function(api) {
   api.use("ecmascript");
   api.use("underscore", "server");
   api.use("tinytest",["server"]);
+  //api.use("iron:router");
   api.use("link:dbaccess", ["server"]);
   api.add_files('lib/dbConnection.js', ["server"]);
-    api.add_files('lib/dbConnectionManager.js', ["server"]);
+  api.add_files('lib/dbConnectionManager.js', ["server"]);
   api.add_files('lib/dbCommandManager.js', ["server"]);
-    api.add_files('lib/dbCommand.js', ["server"]);
+  api.add_files('lib/dbCommand.js', ["server"]);
   api.add_files('lib/dbDocDef.js', ["server"]);
+  api.add_files('lib/methods.js', ["server"]);
   api.add_files('./Test.js', ["server"]);
   //api.addAssets("test/server/settings.json", ["client"]);
 });
