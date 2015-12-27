@@ -26,30 +26,17 @@ DbDef.prototype.init = function(tableName) {
 
 DbDef.prototype.getFields = function(tableName) {
     //return self.def['Collections'][tableName]['fields'];
-    //return _.extend([], this.def['Collections'][tableName], this.def['Collections']['extend']);
+    return _.extend([], this.def['Collections'][tableName]['fields'], this.def['Collections']['extend']['fields']);
 
-    console.log(this.def['Collections'][tableName]);
-    var fields = _.extend({}, this.def['Collections'][tableName]);
-    //var extendFields = _.extend([], this.def['Collections'][extend]);
-    _.each(this.def['Collections']['extend'], function(element, index, list) {
-        console.log(element);
-        fields = _.extend(fields, element);
-    });
-
-
-    console.log("***");
-    console.log(fields);
-
-    return fields;
 };
 
 
 
-DbDef.prototype.normalizeValues = function(tableName, record) {
+DbDef.prototype.normalizeValues = function(tableName, doc) {
     var self = this;
-    for(fieldName in record)
+    for(fieldName in doc)
     {
-        record[fieldName] = self.getFieldValue(tableName, fieldName,record)
+        doc[fieldName] = self.getFieldValue(tableName, fieldName,doc)
     }
 };
 
