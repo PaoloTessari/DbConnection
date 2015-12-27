@@ -84,19 +84,19 @@ SequelizeConnection.prototype.open = function() {
     self.dbInstance.authenticate()
         .then(
         function (value) {
-            future.return(self.dbInstance);
+            future.return(self);
         },
         function (value) {
             self.dbInstance = null;
-            future.return(self.dbInstance);
+            future.return(self);
         })
         .catch(function (err) {
             self.dbInstance = null;
-            future.return(self.dbInstance);
+            future.return(self);
         });/*.done(function(err) {
             future.return(err);
         })*/
- return future.wait()
+   return future.wait()
 
 }.future();
 

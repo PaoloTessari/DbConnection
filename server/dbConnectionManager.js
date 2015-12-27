@@ -11,6 +11,15 @@ DbConnectionManager = function(settingConnections) {
 
 
 
+DbConnectionManager.prototype.getConnectionString = function(alias) {
+    if(this.settings[alias].dialect == 'mongo') {
+      return 'mongodb://'+this.settings[alias].host+':'+this.settings[alias].port+'/'+this.settings[alias].db;
+    }
+    else
+      return "todo sql connection string"
+
+
+}
 
 DbConnectionManager.prototype.open = function(alias) {
 
@@ -28,10 +37,10 @@ DbConnectionManager.prototype.open = function(alias) {
     this.aliases.push(alias);
 
     future.return( conn.open().wait());
-    return conn.open().wait();
+    //return conn.open().wait();
 
 
-    //return future.wait();
+     return future.wait();
 
 }.future();
 

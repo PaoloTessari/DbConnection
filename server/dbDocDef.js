@@ -1,4 +1,6 @@
 
+
+
 DbDef = function(Def) {
  this.def = _.extend({}, Def);
  this.fields = null;
@@ -26,10 +28,18 @@ DbDef.prototype.getFields = function(tableName) {
     //return self.def['Collections'][tableName]['fields'];
     //return _.extend([], this.def['Collections'][tableName], this.def['Collections']['extend']);
 
+    console.log(this.def['Collections'][tableName]);
     var fields = _.extend({}, this.def['Collections'][tableName]);
+    //var extendFields = _.extend([], this.def['Collections'][extend]);
     _.each(this.def['Collections']['extend'], function(element, index, list) {
+        console.log(element);
         fields = _.extend(fields, element);
     });
+
+
+    console.log("***");
+    console.log(fields);
+
     return fields;
 };
 

@@ -1,3 +1,4 @@
+var util = Npm.require("util");
 
 
 DbCommandManager = function(connection, dbdef) {
@@ -27,8 +28,11 @@ SqlCommandManager.prototype.prepareUpdate = function(tableName, doc) {
   var sql = util.format("UPDATE %s set ", tableName);
 
   for (field in fields) {
-     sql += util.format("%s=:%s", field.linkFieldName, field);
+      console.log(field)
+     sql += util.format("%s = :%s,", field.linkFieldName, field);
   }
+  // remove the last ','
+  sql = sql.slice(0, -1);
   sql += util.format(' WHERE mid = :_id');
   return sql;
 };
