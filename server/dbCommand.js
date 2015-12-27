@@ -1,4 +1,4 @@
-
+/* DbCommand */
 DbCommand = function(DbConnection) {
   this.conn = DbConnection;
 };
