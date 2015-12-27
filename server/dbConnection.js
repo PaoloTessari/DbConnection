@@ -6,7 +6,7 @@ assert = Npm.require('asserts');
 //assert = require('assert');
 
 /* DbConnection */
-DbConnection = function(options) {
+DbConnection = function( options) {
     this.options = options;
     this.dbInstance = null;
 };
