@@ -1,6 +1,6 @@
 Package.describe({
   name: "link:dbaccess",
-  version: "1.1.8",
+  version: "1.1.9",
   // Brief, one-line summary of the package.
   summary: "dbaccess",
   // URL to the Git repository containing the source code for this package.
@@ -31,14 +31,14 @@ Package.onUse(function(api) {
   api.use("underscore", "server");
   //api.use("nimble:restivus", "server");
   //api.use("iron:router@1.0.12");
-  api.addFiles("server/dbDocDef.js");
+  //api.addFiles("server/dbDocDef.js");
   api.addFiles("server/dbCommand.js");
   api.addFiles("server/dbCommandManager.js");
   api.addFiles("server/dbConnection.js")
   api.addFiles("server/dbConnectionManager.js");
   api.export("DbConnectionManager", "server");
   api.export("SqlCommandManager", "server");
-  api.export("DbDef", "server");
+  //api.export("DbDef", "server");
 });
 
 /*

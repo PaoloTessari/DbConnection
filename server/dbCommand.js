@@ -14,6 +14,11 @@ SqlCommand.prototype = Object.create(DbCommand.prototype);
 
 
 
+// Remove {} from sql
+SqlCommand.prototype.normalizeSql = function(sql) {
+//    var sql = sql.replace(/\{/g, "").sql.replace(/\}/g, "");
+}
+
 /* SequelizeCommand */
 SequelizeCommand = function(DbConnection) {
     SqlCommand.call(this, DbConnection);
@@ -24,7 +29,11 @@ SequelizeCommand.prototype = Object.create(SqlCommand.prototype);
 
 // action : sequelize.QueryTypes.INSERT
 SequelizeCommand.prototype.ExecSql = function(sql, replacements, action) {
+
+    self = this;
     var future = new Future();
+
+    sql = self.normalizeSql(sql);
 
     this.conn.getInstance().query(sql,
         { replacements:  replacements,
