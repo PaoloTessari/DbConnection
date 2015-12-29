@@ -1,11 +1,15 @@
 var util = Npm.require("util");
+var Future = Npm.require('fibers/future');
 
 
 DbCommandManager = function(connection) {
     this.connection = connection;
+    this.command = null;
 };
 
-
+DbCommandManager.prototype.setCommand = function(command) {
+  this.command = command;
+}
 
 SqlCommandManager = function(connection) {
     DbCommandManager.call(this, connection);
@@ -67,11 +71,28 @@ SqlCommandManager.prototype.getUpdateFields = function (doc) {
 
 SequelizeCommandManager = function(connection) {
     SqlCommandManager.call(this, connection);
-};
+
+    this.setCommand(new SequelizeCommand(connection));
+}
+
 
 SequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype);
 
 SequelizeCommandManager.prototype.execSql = function(tableName, doc, action) {
+    try {
 
-};
+    var future = new Future();
+
+    var record =  action == 'u' ? _.extend({}, doc.o.$set)  : _.extend({}, doc.o);
+    if( action == 'u')
+      record['_id'] = doc.o2['_id'].toString();
+    else if(action == 'd')
+        record['_id'] = doc.o['_id'].toString();
+    future.return(this.command.execSql(tableName, record, action).wait());
+    return future.wait();
+}
+    catch(e) {
+        console.log(e)
+    }
+}.future();
 
