@@ -7,34 +7,51 @@ DbCommandManager = function(connection) {
     this.command = null;
 };
 
+
 DbCommandManager.prototype.setCommand = function(command) {
   this.command = command;
 }
 
 SqlCommandManager = function(connection) {
     DbCommandManager.call(this, connection);
+    this.sql = '';
+
+
 };
 
 SqlCommandManager.prototype = Object.create(DbCommandManager.prototype);
 
+
+SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
+    this.sql = ''
+    if(action == 'i') {
+        var fields =  this.getInsertFields(doc, false);
+        var params = this.getInsertFields(doc, true);
+        this.sql = util.format('INSERT INTO %s (%s) VALUES (%s)', tableName, fields,params);
+    }
+    else  if(action == 'u') {
+        this.sql = util.format("UPDATE %s set %s %s", tableName, this.getUpdateFields(doc), this.getFilter(tableName));
+    }
+    else  if(action == 'd') {
+        this.sql = util.format("DELETE FROM  %s %s ", tableName, this.getFilter(tableName));
+    }
+    console.log(this.sql);
+    //return sql;
+
+}
+
 SqlCommandManager.prototype.prepareInsert = function(tableName, doc) {
 
-    var sql = util.format('INSERT INTO %s (%s) VALUES (%s)',
-      tableName,
-      this.getInsertFields(doc, false),
-      this.getInsertFields(doc, true));
-  return sql;
+  this.prepareSql(tableName,doc, 'i');
 };
 
 SqlCommandManager.prototype.prepareUpdate = function(tableName, doc) {
 
-  var sql = util.format("UPDATE %s set %s %s", tableName, this.getUpdateFields(doc),this.getFilter(tableName));
-  return sql;
+    this.prepareSql(tableName,doc, 'u');
 };
 
 SqlCommandManager.prototype.prepareDelete = function(tableName) {
-  var sql = util.format("DELETE FROM  %s ", tableName) + this.getFilter(tableName);
-  return sql;
+    this.prepareSql(tableName,doc, 'd');
 };
 
 SqlCommandManager.prototype.getFilter = function(tableName) {
@@ -47,7 +64,7 @@ SqlCommandManager.prototype.getFilter = function(tableName) {
 SqlCommandManager.prototype.getInsertFields = function (doc, asParam) {
     var result = '';
     for (item in doc.o) {
-       result+= asParam ? ':'+item : '{'+item+'}';
+       result+= asParam ? ':'+item+',' : '{'+item+'},';
     }
     result = result.slice(0, -1);
     return result;
@@ -78,21 +95,68 @@ SequelizeCommandManager = function(connection) {
 
 SequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype);
 
-SequelizeCommandManager.prototype.execSql = function(tableName, doc, action) {
+SequelizeCommandManager.prototype.execSql = function(sql, doc, action) {
     try {
 
     var future = new Future();
 
-    var record =  action == 'u' ? _.extend({}, doc.o.$set)  : _.extend({}, doc.o);
-    if( action == 'u')
-      record['_id'] = doc.o2['_id'].toString();
-    else if(action == 'd')
-        record['_id'] = doc.o['_id'].toString();
-    future.return(this.command.execSql(tableName, record, action).wait());
+    future.return(this.command.execSql(sql, doc, action).wait());
     return future.wait();
 }
     catch(e) {
         console.log(e)
     }
 }.future();
+
+
+
+OpSequelizeCommandManager = function(connection, dbUtil) {
+    SequelizeCommandManager.call(this, connection);
+    this.dbUtil = dbUtil;
+    this.tableName = '';
+}
+
+OpSequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype);
+
+
+
+OpSequelizeCommandManager.prototype.execSql = function(doc, action) {
+    try {
+
+        var self = this;
+        var future = new Future();
+        var record =  action == 'u' ? _.extend({}, doc.o.$set)  : _.extend({}, doc.o);
+        if( action == 'u')
+            record['_id'] = doc.o2['_id'].toString();
+        else if(action == 'd')
+            record['_id'] = doc.o['_id'].toString();
+
+        this.dbUtil.normalizeValues(this.tableName, record);
+
+        future.return(this.command.execSql(this.sql, record, action).wait());
+        return future.wait();
+    }
+    catch(e) {
+        console.log(e)
+    }
+}.future();
+
+OpSequelizeCommandManager.prototype.prepareInsert = function(tableName, doc) {
+    this.tableName = tableName;
+    this.prepareSql(tableName,doc, 'i');
+    this.sql = this.dbUtil.renameLinkFields(tableName, this.sql);
+}
+
+OpSequelizeCommandManager.prototype.prepareUpdate = function(tableName, doc) {
+    var sql = this.prepareSql(tableName,doc, 'u');
+    return  this.dbUtil.renameLinkFields(tableName, sql);
+}
+
+OpSequelizeCommandManager.prototype.prepareDelete = function(tableName, doc) {
+    var sql = this.prepareSql(tableName,doc, 'd');
+    return  this.dbUtil.renameLinkFields(tableName, sql);
+}
+
+//sql = this.options.dbUtil.renameLinkFields(this.getCollectionName(doc), sql);
+
 

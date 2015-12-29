@@ -17,10 +17,14 @@ SqlCommand.prototype = Object.create(DbCommand.prototype);
 
 
 
+
+
 // Remove {} from sql
+/*
 SqlCommand.prototype.normalizeSql = function(sql) {
-  return sql.replace(/\{/g, "").replace(/\}/g, "");
+  return replace(/\{/g, "").sql.replace(/\}/g, "");
 }
+*/
 
 /* SequelizeCommand */
 SequelizeCommand = function(DbConnection) {
@@ -37,7 +41,10 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
 
 
     try {
-        var sql = self.normalizeSql(sql);
+        //var sql = self.normalizeSql(sql);
+        var sql = sql;
+        var replacements = _.extend({}, replacements);
+        var action = action;
 
         var future = new Future();
         this.conn.getInstance().query(sql,

@@ -36,9 +36,12 @@ Package.onUse(function(api) {
   api.addFiles("server/dbCommandManager.js");
   api.addFiles("server/dbConnection.js")
   api.addFiles("server/dbConnectionManager.js");
+  api.addFiles("server/dbUtil.js");
   api.export("DbConnectionManager", "server");
   api.export("SqlCommandManager", "server");
   api.export("SequelizeCommandManager", "server");
+  api.export("OpSequelizeCommandManager", "server");
+  api.export("DbUtil", "server");
   //api.export("DbDef", "server");
 });
 
