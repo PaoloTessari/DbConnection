@@ -1,3 +1,6 @@
+var Future = Npm.require('fibers/future');
+
+var dateFormat = Npm.require("date-format-lite");
 
 DbUtil = function(Def) {
  this.def = _.extend({}, Def);
@@ -20,24 +23,32 @@ DbDef.prototype.getFields = function(tableName) {
 */
 
 DbUtil.prototype.getLinkField = function(tableName, fieldName) {
+    var future = new Future();
     var obj = null;
     try {
-        //var key = _.findKey(this.def.Collections[tableName].fields, fieldName );
         obj = _.find(this.def.Collections[tableName].fields, function(obj) {
             return obj.fieldName == fieldName })
-
+/*
         if(obj != undefined)
-          console.log('getLinkField '+obj.linkFieldName)
+          console.log('getLinkField '+obj.fieldName+' '+obj.linkFieldName);
+          */
     }
     catch (e) {
         console.log(e)
 
     }
     finally {
+
       //return  obj != undefined && obj.linkFieldName != undefined ? obj.linkFieldName : fieldName;
-      return  obj == undefined ? null : obj;
+      future.return( obj == undefined ? null : obj);
+      return future.wait();
     }
-};
+}.future();
+
+DbUtil.getLinkFieldName= function(tableName, fieldName) {
+    var field = this.getLinkField(tableName, fieldName);
+    return field == null || field.linkFieldName == undefined ? fieldName : field.linkFieldName;
+}
 
 // Return an array of all instance {item[.itemn]} in str without {}
 // Example str = 'update DOC set {_id} = :id, {updated.userName} where ...'
@@ -59,8 +70,8 @@ DbUtil.prototype.renameLinkFields = function(tableName, sql) {
   var fields = _.extend([], this.getLinkFields(sql));
   fields.forEach(function(element, index,array) {
 
-      linkField = self.getLinkField(tableName, element);
-      linkFieldName = linkField == null ? element : linkField.linkFieldName;
+      linkField = self.getLinkField(tableName, element).wait();
+      linkFieldName = (linkField == null || linkField.linkFieldName == undefined || linkField.linkFieldName == null) ? element : linkField.linkFieldName;
       sql = sql.replace('{'+element+'}', linkFieldName);
 
   })
@@ -69,79 +80,142 @@ DbUtil.prototype.renameLinkFields = function(tableName, sql) {
 };
 
 
-DbUtil.prototype.normalizeValues = function(tableName, doc) {
+DbUtil.prototype.normalizeValues = function(tableName, record) {
     var self = this;
-    for(fieldName in doc)
-        doc[fieldName] = self.getFieldValue(tableName, fieldName,doc)
-};
+    var future = new Future();
+    try {
+        for (fieldName in record) {
 
-DbUtil.prototype.getFieldValue = function (tableName,fieldName, doc) {
+            if(record[fieldName].constructor == {}.constructor) {
+                for (item2 in record[fieldName]) {
+                    field = self.getLinkField(tableName,fieldName+'.'+item2).wait();
+                    if(field != null)
+                        record[fieldName+'_'+item2] = self.getFieldValue(field, record[fieldName][item2]).wait();
+
+                }
+                delete record[fieldName];
+            }
+            else {
+                field = self.getLinkField(tableName,fieldName).wait();
+                if(field != null)
+                  record[fieldName] = self.getFieldValue(field, record[fieldName]).wait();
+                else
+                    delete record[fieldName];
+            }
+        }
+        future.return(true);
+        console.log('normalizeValues');
+        console.log(record);
+    }
+    catch(e) {
+        console.log(e);
+        future.return(false);
+    }
+    return future.wait();
+
+}.future();
+
+DbUtil.prototype.getFieldValue = function (field, value) {
     var self = this;
-    var field = this.getLinkField(tableName, fieldName);
+
+    var future = new Future();
+
+    var result = null;
 
     try {
         if(field != null) {
             if (field.fieldType == 'ISODATE') {
-                return doc[fieldName] ? new Date(doc[fieldName]).format('DD-MMM-YYYY hh:mm:ss:SS') : null;
+                result  = value !=undefined ? new Date(value).format('DD-MMM-YYYY hh:mm:ss:SS') : null;
+                if(field.mandatory != undefined && field.mandatory == true)
+                    result  = '01-JAN-1900 00:00:00';
             }
             else if (field.fieldType == 'OBJECT') {
-                return doc[fieldName] ? doc[fieldName].toString() : null;
+                result  = value ? value.toString() : null;
+            }
+            else if (field.fieldType == 'ARRAY') {
+                if (value) {
+                    var result = '';
+                    for (obj in value)
+                        result += obj + ' ';
+                    result  =result;
+                }
+
+            }
+            else {
+
+                result  = value ? value: null;
+                if(result == null  && field.mandatory != undefined && field.mandatory == true)
+                    result  = '';
+
+            }
+        }
+        else {
+            result  = value ? value : null;
+        }
+    }
+    catch (error) {
+        console.log(error);
+        result  = null;
+    }
+    finally {
+        future.return(result);
+        return future.wait();
+
+    }
+
+
+}.future();
+
+/*
+DbUtil.prototype.getFieldValue = function (tableName,fieldName, doc) {
+    var self = this;
+
+    var future = new Future();
+    var field = self.getLinkField(tableName, fieldName).wait();
+    var result = null;
+
+    try {
+        if(field != null) {
+            if (field.fieldType == 'ISODATE') {
+                result  = doc[fieldName] ? new Date(doc[fieldName]).format('DD-MMM-YYYY hh:mm:ss:SS') : null;
+                if(field.mandatory != undefined && field.mandatory == true)
+                    result  = '01-JAN-1900 00:00:00';
+            }
+            else if (field.fieldType == 'OBJECT') {
+                result  = doc[fieldName] ? doc[fieldName].toString() : null;
             }
             else if (field.fieldType == 'ARRAY') {
                 if (doc[fieldName]) {
                     var result = '';
                     for (obj in doc[fieldName])
                         result += obj + ' ';
-                    return result;
+                    result  =result;
                 }
-                else
-                    return null;
+
             }
             else {
-                return doc[fieldName] ? doc[fieldName] : null;
+
+                result  = doc[fieldName] ? doc[fieldName] : null;
+                if(result == null  && field.mandatory != undefined && field.mandatory == true)
+                    result  = '';
+
             }
         }
         else {
-            return doc[fieldName] ? doc[fieldName] : null;
+            result  = doc[fieldName] ? doc[fieldName] : null;
         }
     }
     catch (error) {
         console.log(error);
-        return null;
+        result  = null;
+    }
+    finally {
+        future.return(result);
+        return future.wait();
+
     }
 
-/*
-    var self = this;
-    var fields = this.fields;
-    try {
-      var field = fields[fieldName];
-      if (field.fieldType == 'ISODATE') {
-          return record[fieldName] ? new Date(record[fieldName]).format('DD-MMM-YYYY hh:mm:ss:SS') : null;
-      }
-      else if (field.fieldType == 'OBJECT') {
-          return record[fieldName] ? record[fieldName].toString() : null;
-      }
-      else if (field.fieldType == 'ARRAY' ) {
-              if(record[fieldName]) {
-                  var result = '';
-                  for (obj in record[fieldName])
-                      result += obj+' ';
-                  return result;
-              }
-              else
-                  return null;
-      }
-      else {
-          return record[fieldName] ? record[fieldName] : null;
-      }
 
-
-      }
-    catch (error) {
-            return null;
-        }
+}.future();
 */
-};
-
-
 

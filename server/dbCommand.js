@@ -55,16 +55,16 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
                         action == 'd' ? Sequelize.QueryTypes.DELETE : ''
             }
         ).then(function (rec) {
-                console.log(rec);
+                //console.log(rec);
                 console.log("Execute success: " + action);
                 future.return(true)
             }, function (err) {
-                console.log(err);
+                console.log(err.message);
                 console.log("Execute fail: " + action);
                 future.return(false)
 
             }).catch(function (err) {
-                console.log(err);
+                console.log(err.message);
                 console.log("Execute fail: " + action);
                 future.return(false);
             });
