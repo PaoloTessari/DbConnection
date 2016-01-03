@@ -1,6 +1,6 @@
 var Future = Npm.require('fibers/future');
 
-var dateFormat = Npm.require("date-format-lite");
+var DateFormat = Npm.require("date-format-lite");
 
 DbUtil = function(Def) {
  this.def = _.extend({}, Def);
@@ -45,9 +45,12 @@ DbUtil.prototype.getLinkField = function(tableName, fieldName) {
     }
 }.future();
 
-DbUtil.getLinkFieldName= function(tableName, fieldName) {
-    var field = this.getLinkField(tableName, fieldName);
-    return field == null || field.linkFieldName == undefined ? fieldName : field.linkFieldName;
+DbUtil.prototype.getLinkFieldName = function(tableName, fieldName) {
+    var field = this.getLinkField(tableName, fieldName).wait();
+    var result = field == null || field.linkFieldName == undefined || field.linkFieldName == null ? fieldName : field.linkFieldName;
+    if(result.toUpperCase().slice(0,7) == 'DECODE_')
+      result = '';
+    return result;
 }
 
 // Return an array of all instance {item[.itemn]} in str without {}
@@ -125,9 +128,13 @@ DbUtil.prototype.getFieldValue = function (field, value) {
     try {
         if(field != null) {
             if (field.fieldType == 'ISODATE') {
-                result  = value !=undefined ? new Date(value).format('DD-MMM-YYYY hh:mm:ss:SS') : null;
-                if(field.mandatory != undefined && field.mandatory == true)
-                    result  = '01-JAN-1900 00:00:00';
+                if(value != undefined) {
+                    var date = new Date(value);
+                    result = date.format('DD-MMM-YYYY hh:mm:ss:SS');
+                }
+                else
+                  result = null;
+
             }
             else if (field.fieldType == 'OBJECT') {
                 result  = value ? value.toString() : null;
@@ -144,8 +151,7 @@ DbUtil.prototype.getFieldValue = function (field, value) {
             else {
 
                 result  = value ? value: null;
-                if(result == null  && field.mandatory != undefined && field.mandatory == true)
-                    result  = '';
+
 
             }
         }

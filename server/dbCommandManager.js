@@ -94,17 +94,21 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
 
         if(doc.o.$set[item].constructor == {}.constructor) {
             for (item2 in doc.o.$set[item]) {
-                linkFieldName =  self.getLinkFieldName(tableName, item + '.' + item2);
-               result += asParam ? ':' + item + '_' + item2 + ',' : + linkFieldName+ ',';
+               linkFieldName =  self.dbUtil.getLinkFieldName(tableName, item + '.' + item2);
+                if(linkFieldName != '')
+                    result += util.format(" %s = :%s,",linkFieldName, item+'_'+item2);
             }
         }
         else {
-            linkFieldName =  self.getLinkFieldName(tableName, item + '.' + item2);
-            result += util.format(" %s = :%s,",linkFieldName, item);
+
+            linkFieldName =  self.dbUtil.getLinkFieldName(tableName, item);
+            if(linkFieldName != '')
+              result += util.format(" %s = :%s,",linkFieldName, item);
         }
 
     }
-    result = result.slice(0, -1);
+    if(result != '')
+      result = result.slice(0, -1);
 
     return result;
 };
