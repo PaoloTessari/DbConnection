@@ -1,6 +1,6 @@
 Package.describe({
   name: "link:dbaccess",
-  version: "1.2.1",
+  version: "1.2.2",
   // Brief, one-line summary of the package.
   summary: "dbaccess",
   // URL to the Git repository containing the source code for this package.
@@ -37,13 +37,13 @@ Package.onUse(function(api) {
   api.addFiles("server/dbCommandManager.js");
   api.addFiles("server/dbConnection.js")
   api.addFiles("server/dbConnectionManager.js");
-  api.addFiles("server/dbUtil.js");
+  //api.addFiles("server/dbUtil.js");
   api.addFiles("server/dbTable.js");
   api.export("DbConnectionManager", "server");
   api.export("SqlCommandManager", "server");
   api.export("SequelizeCommandManager", "server");
   api.export("OpSequelizeCommandManager", "server");
-  api.export("DbUtil", "server");
+  //api.export("DbUtil", "server");
   api.export("DbTables", "server");
   //api.export("DbTable", "server");
   //api.export("DbRow", "server");

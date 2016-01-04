@@ -1,8 +1,7 @@
-/**
- * Created by paolo on 20/12/15.
- */
 
 var Future = Npm.require('fibers/future');
+
+
 DbConnectionManager = function(settingConnections) {
     this.connections = [];
     this.aliases = [];
@@ -12,6 +11,7 @@ DbConnectionManager = function(settingConnections) {
 
 
 DbConnectionManager.prototype.getConnectionString = function(alias) {
+    "use strict";
     if(this.settings[alias].dialect == 'mongo') {
       return 'mongodb://'+this.settings[alias].host+':'+this.settings[alias].port+'/'+this.settings[alias].db;
     }
@@ -23,24 +23,23 @@ DbConnectionManager.prototype.getConnectionString = function(alias) {
 
 DbConnectionManager.prototype.open = function(alias) {
 
+    var self = this;
     var future = new Future();
 
+    console.log(this.settings[alias]);
     var conn = null;
-    if(this.settings[alias].dialect == 'mongo') {
-        conn = new MongoConnection(this.settings[alias]);
+    if(self.settings[alias].dialect == 'mongo') {
+        conn = new MongoConnection(self.settings[alias]);
     }
     else {
-        conn = new SequelizeConnection(this.settings[alias]);
+        conn = new SequelizeConnection(self.settings[alias]);
     }
 
-    this.connections.push(conn);
-    this.aliases.push(alias);
+    self.connections.push(conn);
+    self.aliases.push(alias);
 
     future.return( conn.open().wait());
-    //return conn.open().wait();
-
-
-     return future.wait();
+    return future.wait();
 
 }.future();
 

@@ -1,6 +1,7 @@
 var Future = Npm.require('fibers/future');
 var Sequelize = Npm.require("sequelize");
 
+
 /* DbCommand */
 DbCommand = function(DbConnection) {
   this.conn = DbConnection;
@@ -14,8 +15,6 @@ SqlCommand = function(DbConnection) {
 };
 
 SqlCommand.prototype = Object.create(DbCommand.prototype);
-
-
 
 
 
@@ -37,7 +36,7 @@ SequelizeCommand.prototype = Object.create(SqlCommand.prototype);
 // action : sequelize.QueryTypes.INSERT
 SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
 
-    self = this;
+    var self = this;
 
 
     try {

@@ -1,9 +1,8 @@
-NpmSequelize = Npm.require('sequelize');
+var Sequelize = Npm.require('sequelize');
 var Future = Npm.require('fibers/future');
+var mongo = Npm.require('mongodb');
+var assert = Npm.require('asserts');
 
-mongo = Npm.require('mongodb');
-assert = Npm.require('asserts');
-//assert = require('assert');
 
 /* DbConnection */
 DbConnection = function( options) {
@@ -77,7 +76,7 @@ SequelizeConnection.prototype = Object.create(DbConnection.prototype);
 //SequelizeConnection.prototype.open = function(callback) {
 SequelizeConnection.prototype.open = function() {
     var self = this;
-    self.dbInstance = new NpmSequelize(this.options.database, this.options.username, this.options.password, this.options);
+    self.dbInstance = new Sequelize(this.options.database, this.options.username, this.options.password, this.options);
 
      //return future.wait();
     var future = new Future();

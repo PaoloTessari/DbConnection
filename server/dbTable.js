@@ -1,4 +1,4 @@
-
+var DateFormat = Npm.require("date-format-lite");
 
 DbTables = function(settings) {
     var self = this;
@@ -22,16 +22,14 @@ DbTables.prototype.field = function(tableName, fieldName1, fieldName2) {
     })
 };
 
-
-
 DbTables.prototype.normalizeRecord = function(tableName, record) {
     var self = this;
     try {
-        for (fieldName in record) {
+        for (var fieldName in record) {
 
             if(record[fieldName].constructor == {}.constructor) {
-                for (item2 in record[fieldName]) {
-                    field = self.field(tableName,fieldName+'.'+item2);
+                for (var item2 in record[fieldName]) {
+                    var field = self.field(tableName,fieldName+'.'+item2);
                     if(field != null)
                         record[fieldName+'_'+item2] = self.normalizeFieldValue(field, record[fieldName][item2]);
                 }
@@ -82,7 +80,7 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
         }
         else if (field.fieldType == 'ARRAY') {
             if (value) {
-                for (obj in value)
+                for (var obj in value)
                     result += obj + ' ';
             }
         }

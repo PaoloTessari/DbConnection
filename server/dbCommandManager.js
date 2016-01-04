@@ -76,10 +76,10 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
     var self = this;
     var result = '';
     var field = null;
-    for (item in doc.o) {
+    for (var item in doc.o) {
 
         if(doc.o[item].constructor == {}.constructor) {
-            for(item2 in doc.o[item]) {
+            for(var item2 in doc.o[item]) {
                 field = self.dbTables.field(tableName, item, item2);
                 // for nested value  linkFieldName is mandatory
                 if(field && field.linkFieldName)
@@ -102,10 +102,10 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
 SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
     var result = '';
     var field = '';
-    for (item in doc.o.$set) {
+    for (var item in doc.o.$set) {
 
         if(doc.o.$set[item].constructor == {}.constructor) {
-            for (item2 in doc.o.$set[item]) {
+            for (var item2 in doc.o.$set[item]) {
                 field = self.dbTables.field(tableName, item1, item2);
                 // for nested value  linkFieldName is mandatory
                 if(field && field.linkFieldName)
