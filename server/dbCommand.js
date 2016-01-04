@@ -50,22 +50,20 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
         this.conn.getInstance().query(sql,
             {
                 replacements: replacements,
-                type: action == 'i' ? Sequelize.QueryTypes.INSERT :
+                type:
+                    action == 'i' ? Sequelize.QueryTypes.INSERT :
                     action == 'u' ? Sequelize.QueryTypes.UPDATE :
-                        action == 'd' ? Sequelize.QueryTypes.DELETE : ''
+                    action == 'd' ? Sequelize.QueryTypes.DELETE : ''
             }
         ).then(function (rec) {
-                //console.log(rec);
-                console.log("Execute success: " + action);
+                console.log("[OK] execSql: " + action);
                 future.return(true)
             }, function (err) {
-                console.log(err.message);
-                console.log("Execute fail: " + action);
+                console.log("**[KO] execSql: " + err.message+' '+sql);
                 future.return(false)
 
             }).catch(function (err) {
-                console.log(err.message);
-                console.log("Execute fail: " + action);
+                console.log("**[KO] execSql: " + err.message+' '+sql);
                 future.return(false);
             });
         return future.wait();

@@ -172,56 +172,6 @@ DbUtil.prototype.getFieldValue = function (field, value) {
 
 }.future();
 
-/*
-DbUtil.prototype.getFieldValue = function (tableName,fieldName, doc) {
-    var self = this;
-
-    var future = new Future();
-    var field = self.getLinkField(tableName, fieldName).wait();
-    var result = null;
-
-    try {
-        if(field != null) {
-            if (field.fieldType == 'ISODATE') {
-                result  = doc[fieldName] ? new Date(doc[fieldName]).format('DD-MMM-YYYY hh:mm:ss:SS') : null;
-                if(field.mandatory != undefined && field.mandatory == true)
-                    result  = '01-JAN-1900 00:00:00';
-            }
-            else if (field.fieldType == 'OBJECT') {
-                result  = doc[fieldName] ? doc[fieldName].toString() : null;
-            }
-            else if (field.fieldType == 'ARRAY') {
-                if (doc[fieldName]) {
-                    var result = '';
-                    for (obj in doc[fieldName])
-                        result += obj + ' ';
-                    result  =result;
-                }
-
-            }
-            else {
-
-                result  = doc[fieldName] ? doc[fieldName] : null;
-                if(result == null  && field.mandatory != undefined && field.mandatory == true)
-                    result  = '';
-
-            }
-        }
-        else {
-            result  = doc[fieldName] ? doc[fieldName] : null;
-        }
-    }
-    catch (error) {
-        console.log(error);
-        result  = null;
-    }
-    finally {
-        future.return(result);
-        return future.wait();
-
-    }
 
 
-}.future();
-*/
 
