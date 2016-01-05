@@ -43,8 +43,8 @@ DbTables.prototype.normalizeRecord = function(tableName, record) {
                     delete record[fieldName];
             }
         }
-        console.log('normalizeValues');
-        console.log(record);
+        //console.log('normalizeValues');
+        //console.log(record);
         return  record;
     }
     catch(e) {
@@ -95,6 +95,26 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
     }
 };
 
+/*
+ DbTables.prototype.MongoDef = function() {
+    try {
+
+        connMgr.open(Meteor.settings.OpLog.Databases.local).wait();
+        var db = connMgr.getConnection(Meteor.settings.OpLog.Databases.local).wait().dbInstance;
+        var defArr = db.collection("def").find({objtype: "SGRID"}).toArray(function(err, docs) {
+            //assert.equal(err, null);
+            //assert.equal(2, docs.length);
+            console.log("Found the following records");
+            console.dir(docs);
+            return true;
+            //callback(docs);
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return false;
+    }
+}.future();
 /*
 
 DbRow = function(dbTable) {

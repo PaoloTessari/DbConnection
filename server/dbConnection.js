@@ -35,7 +35,7 @@ MongoConnection.prototype.open = function() {
 
      mongo.MongoClient.connect(self.connectionsString(), function (err, db) {
          self.dbInstance = db;
-         future.return(db);
+         future.return(self);
 
      });
      return future.wait();

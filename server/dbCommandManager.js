@@ -102,11 +102,15 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
 SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
     var result = '';
     var field = '';
-    for (var item in doc.o.$set) {
+    var self = this;
 
-        if(doc.o.$set[item].constructor == {}.constructor) {
-            for (var item2 in doc.o.$set[item]) {
-                field = self.dbTables.field(tableName, item1, item2);
+    var set = _.extend({}, doc.o.$set || doc.o);
+    //console.log(set);
+    for (var item in set) {
+
+        if(set[item].constructor == {}.constructor) {
+            for (var item2 in set[item]) {
+                field = self.dbTables.field(tableName, item, item2);
                 // for nested value  linkFieldName is mandatory
                 if(field && field.linkFieldName)
                   result += util.format(" %s = :%s,",field.linkFieldName, item+'_'+item2);
@@ -165,7 +169,7 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
 
         var self = this;
         var future = new Future();
-        var record =  action == 'u' ? _.extend({}, doc.o.$set)  : _.extend({}, doc.o);
+        var record =  action == 'u' ? _.extend({}, doc.o.$set || doc.o)  : _.extend({}, doc.o);
         if( action == 'u')
             record['_id'] = doc.o2['_id'].toString();
         else if(action == 'd')

@@ -55,7 +55,7 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
                     action == 'd' ? Sequelize.QueryTypes.DELETE : ''
             }
         ).then(function (rec) {
-                console.log("[OK] execSql: " + action);
+                console.log("[OK] execSql: " + sql);
                 future.return(true)
             }, function (err) {
                 console.log("**[KO] execSql: " + err.message+' '+sql);
