@@ -1,11 +1,22 @@
 var DateFormat = Npm.require("date-format-lite");
+var Future = Npm.require('fibers/future');
 
-DbTables = function(settings) {
+
+/* settings: Meteor.settings.Def.Collections) */
+DbTables = function(settings, localConnection) {
     var self = this;
     this.settings = settings  || {};
+    this.localConnection = localConnection;
+
+    //this.query = null;
+   // this.handle = null;
+
+    this.localDef = _.extend([], this.loadLocalDef());
+
+    //this.observeLocalDef();
 
 
-};
+}
 
 DbTables.prototype.table = function(tableName) {
     return this.settings && this.settings[tableName] ? this.settings[tableName] : null ;
@@ -16,11 +27,44 @@ DbTables.prototype.fields = function(tableName) {
 };
 
 DbTables.prototype.field = function(tableName, fieldName1, fieldName2) {
-    return  _.find(this.table(tableName).fields, function(field) {
+
+    var field =  _.find(this.table(tableName).fields, function(field) {
         return (field.fieldName == fieldName1 && fieldName2 == undefined ) ||
                (field.fieldName == fieldName1+'.'+fieldName2);
     })
+     return field;
 };
+
+DbTables.prototype.tableField = function(tableName, _id, fieldName) {
+    var field = null;
+/*
+
+    self.localConnection.dbInstance.collection(tableName).find({}).toArray(function(err, docs) {
+
+        console.log("Found the following records");
+        //console.dir(docs);
+        //self.localDef = _.extend([], docs);
+        future.return(docs);
+        return future.wait();
+    var rec =  _.find(this.localDef._id, function(rec) {
+        return (rec._id == defid  || null);
+
+    })
+    if(rec != null) {
+         field =  _.find(rec.fields, function(field) {
+            return (field.aliasName == fieldname || null)
+        })
+
+        if(field == null ||  field.fiedlName.slice(0,4) != 'ATTR');
+          field = null;
+
+
+    }
+
+*/
+    return field;
+};
+
 
 DbTables.prototype.normalizeRecord = function(tableName, record) {
     var self = this;
@@ -53,7 +97,7 @@ DbTables.prototype.normalizeRecord = function(tableName, record) {
         //return record;
     }
 
-}
+};
 
 DbTables.prototype.normalizeFieldValue = function (field, value) {
     var self = this;
@@ -95,26 +139,42 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
     }
 };
 
-/*
- DbTables.prototype.MongoDef = function() {
-    try {
 
-        connMgr.open(Meteor.settings.OpLog.Databases.local).wait();
-        var db = connMgr.getConnection(Meteor.settings.OpLog.Databases.local).wait().dbInstance;
-        var defArr = db.collection("def").find({objtype: "SGRID"}).toArray(function(err, docs) {
-            //assert.equal(err, null);
-            //assert.equal(2, docs.length);
-            console.log("Found the following records");
-            console.dir(docs);
-            return true;
+DbTables.prototype.loadLocalDef = function() {
+    try {
+          self = this;
+
+          var future = new Future();
+          self.localConnection.dbInstance.collection("def").find({}).toArray(function(err, docs) {
+
+           console.log("Found the following records");
+           //console.dir(docs);
+           //self.localDef = _.extend([], docs);
+           future.return(docs);
+           return future.wait();
             //callback(docs);
         });
     }
     catch (error) {
         console.log(error);
-        return false;
+        future.return(null);
     }
+
 }.future();
+/*
+DbTables.prototype.observeLocalDef = function() {
+self = this;
+    Meteor.subscribe('def', function() {
+        self.query =  self.localConnection.dbInstance.collection("def").find({});
+
+        self.query.observe({
+            addedAt: function(doc, atIndex) {
+                if(atIndex > (msgCount - 1)) console.log('added');
+            }
+        });
+    });
+
+};
 /*
 
 DbRow = function(dbTable) {

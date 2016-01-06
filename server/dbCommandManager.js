@@ -83,13 +83,21 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
                 field = self.dbTables.field(tableName, item, item2);
                 // for nested value  linkFieldName is mandatory
                 if(field && field.linkFieldName)
-                 result+= asParam ? ':'+item+'_'+item2+',' : field.linkFieldName+',';
+                   result+= asParam ? ':'+item+'_'+item2+',' : field.linkFieldName+',';
             }
         }
         else {
             field = self.dbTables.field(tableName, item);
             if(field)
-            result += asParam ? ':' + item + ',' : (field.linkFieldName || item)+ ',';
+              result += asParam ? ':' + item + ',' : (field.linkFieldName || item)+ ',';
+            else
+            {
+               field = self.dbTables.field(tableName, '$DEF');
+                if(field != null) {
+                    field = self.dbTables.tableField(doc.o['_id'], item)
+
+                }
+            }
         }
     }
     result = result.slice(0, -1);
