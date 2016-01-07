@@ -35,33 +35,31 @@ DbTables.prototype.field = function(tableName, fieldName1, fieldName2) {
      return field;
 };
 
-DbTables.prototype.tableField = function(tableName, _id, fieldName) {
+DbTables.prototype.tableField = function(tableName,doc fieldName) {
     var field = null;
-/*
 
-    self.localConnection.dbInstance.collection(tableName).find({}).toArray(function(err, docs) {
+    var doc = self.localConnection.dbInstance.collection(tableName).findOne({_id: _id},);
+    if(doc) {
 
-        console.log("Found the following records");
-        //console.dir(docs);
-        //self.localDef = _.extend([], docs);
-        future.return(docs);
-        return future.wait();
-    var rec =  _.find(this.localDef._id, function(rec) {
-        return (rec._id == defid  || null);
+        var rec;
+        console.log("Found the following record ");
+        console.dir(doc);
 
-    })
-    if(rec != null) {
-         field =  _.find(rec.fields, function(field) {
-            return (field.aliasName == fieldname || null)
-        })
+        rec = _.find(this.localDef, function (rec) {
+            return (rec._id == doc['defid'] || null);
 
-        if(field == null ||  field.fiedlName.slice(0,4) != 'ATTR');
-          field = null;
+       })
+       if(rec != null) {
+           field = _.find(rec.fields, function (field) {
+               return (field.aliasName == fieldname || null)
+           })
+
+           if (field == null || field.fiedlName.slice(0, 4) != 'ATTR');
+           field = null;
+       }
 
 
     }
-
-*/
     return field;
 };
 

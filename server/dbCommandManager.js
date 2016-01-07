@@ -94,7 +94,7 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
             {
                field = self.dbTables.field(tableName, '$DEF');
                 if(field != null) {
-                    field = self.dbTables.tableField(doc.o['_id'], item)
+                    field = self.dbTables.tableField(doc.o, item)
 
                 }
             }
