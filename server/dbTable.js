@@ -1,6 +1,6 @@
 var DateFormat = Npm.require("date-format-lite");
 var Future = Npm.require('fibers/future');
-
+var mongo = Npm.require('mongodb')
 
 /* settings: Meteor.settings.Def.Collections) */
 DbTables = function(settings, localConnection) {
@@ -11,7 +11,12 @@ DbTables = function(settings, localConnection) {
     //this.query = null;
    // this.handle = null;
 
-    this.localDef = _.extend([], this.loadLocalDef());
+    //this.localDef = _.extend([], this.loadLocalDef().wait());
+    //this.defCursor = this.openDefCursor().wait();
+
+    //console.log("** localDef**");
+    //console.dir(this.localDef);
+
 
     //this.observeLocalDef();
 
@@ -35,33 +40,63 @@ DbTables.prototype.field = function(tableName, fieldName1, fieldName2) {
      return field;
 };
 
-DbTables.prototype.tableField = function(tableName,doc fieldName) {
-    var field = null;
+DbTables.prototype.tableField = function(tableName,id,fieldName) {
 
-    var doc = self.localConnection.dbInstance.collection(tableName).findOne({_id: _id},);
-    if(doc) {
+    /*
+    var cursor = self.localConnection.dbInstance.collection(tableName).find({_id: id})
+    cursor.each(function(document) {
+        console.dir(document);
+        doc = mongo.bson.shallowClone(document);
+    });
+    console.log(doc);
 
-        var rec;
-        console.log("Found the following record ");
-        console.dir(doc);
+    */
 
-        rec = _.find(this.localDef, function (rec) {
-            return (rec._id == doc['defid'] || null);
+    var self = this;
+    var future = new Future();
+    self.localConnection.dbInstance.collection(tableName).find({_id: id}).toArray(function(err, docs) {
+        console.log(err);
+        console.log(docs);
+        var doc = docs.length == 1 ? _.extend({}, docs[0]) : {};
+        var field = null;
 
-       })
-       if(rec != null) {
-           field = _.find(rec.fields, function (field) {
-               return (field.aliasName == fieldname || null)
-           })
+        if (doc) {
 
-           if (field == null || field.fiedlName.slice(0, 4) != 'ATTR');
-           field = null;
-       }
+            var rec;
+            console.log("Found the following record ");
+            console.dir(doc);
+            console.log('defid:'+doc['defid']);
 
+            /*
+            rec = _.find(self.localDef, function (rec) {
+                return (rec['_id'] == doc['defid'] || null);
 
-    }
-    return field;
-};
+            })
+            */
+            self.localConnection.dbInstance.collection('def').find({_id: doc['defid']}).toArray(function(err, docs) {
+                //if (rec != null) {
+                rec = docs[0];
+                console.log('def record');
+                console.log(rec);
+                var fld = _.find(rec.params.fields, function (field) {
+                    return (field.aliasName.toUpperCase() == fieldName.toUpperCase())
+                })
+
+                if (fld != null && fld.fieldName.slice(0, 4).toUpperCase() == 'ATTR') {
+                    field = {};
+                    field.fieldName = fld.aliasName;
+                    field.linkFieldName = fld.fieldName;
+                    console.log(fld);
+                    future.return(field);
+                }
+                else
+                  future.return(null);
+            });
+        }
+
+    });
+    return future.wait();
+}.future();
 
 
 DbTables.prototype.normalizeRecord = function(tableName, record) {
@@ -106,7 +141,7 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
       return value || null;
 
     try {
-        if (field.fieldType == 'ISODATE') {
+        if (field.fieldType.toUpperCase() == 'ISODATE') {
             if(value) {
                 try {
                     var date = new Date(value);
@@ -117,10 +152,10 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
                 }
             }
         }
-        else if (field.fieldType == 'OBJECT') {
+        else if (field.fieldType.toUpperCase() == 'OBJECT') {
             result  = value ? value.toString() : null;
         }
-        else if (field.fieldType == 'ARRAY') {
+        else if (field.fieldType.toUpperCase() == 'ARRAY') {
             if (value) {
                 for (var obj in value)
                     result += obj + ' ';
@@ -145,8 +180,6 @@ DbTables.prototype.loadLocalDef = function() {
           var future = new Future();
           self.localConnection.dbInstance.collection("def").find({}).toArray(function(err, docs) {
 
-           console.log("Found the following records");
-           //console.dir(docs);
            //self.localDef = _.extend([], docs);
            future.return(docs);
            return future.wait();
@@ -156,9 +189,29 @@ DbTables.prototype.loadLocalDef = function() {
     catch (error) {
         console.log(error);
         future.return(null);
+        return future.wait();
     }
 
 }.future();
+
+
+DbTables.prototype.openDefCursor = function() {
+    try {
+        self = this;
+
+        var future = new Future();
+        future.return(self.localConnection.dbInstance.collection("def").find({}));
+         return future.wait();
+            //callback(docs);
+    }
+    catch (error) {
+        console.log(error);
+        future.return(null);
+        return future.wait();
+    }
+
+}.future();
+
 /*
 DbTables.prototype.observeLocalDef = function() {
 self = this;

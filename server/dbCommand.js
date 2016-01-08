@@ -37,7 +37,8 @@ SequelizeCommand.prototype = Object.create(SqlCommand.prototype);
 SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
 
     var self = this;
-
+    console.log('replacements');
+    console.dir(replacements);
 
     try {
         //var sql = self.normalizeSql(sql);
