@@ -1,5 +1,6 @@
 var util = Npm.require("util");
 var Future = Npm.require('fibers/future');
+var Fiber = Npm.require('fibers');
 
 
 DbCommandManager = function(connection) {
@@ -15,6 +16,7 @@ DbCommandManager.prototype.setCommand = function(command) {
 SqlCommandManager = function(connection, dbTables) {
     DbCommandManager.call(this, connection);
     this.dbTables = dbTables;
+    this.attrFields = [];
 //    this.sql = '';
 
 
@@ -26,19 +28,24 @@ SqlCommandManager.prototype = Object.create(DbCommandManager.prototype);
 SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
     var sql = ''
     if(action == 'i') {
-        var fields =  this.getInsertFields(tableName,doc, false);
+        var fields =  this.getInsertFields(tableName,doc, false).wait();
 
+        //console.log('fields:'+fields)
         // no fields to write in sql table
         if(fields == '')
-          return '';
+            return '';
 
-        var params = this.getInsertFields(tableName,doc, true);
+
+        var params = this.getInsertFields(tableName,doc, true).wait();
+        //console.log('params:'+params)
+
         return util.format('INSERT INTO %s (%s) VALUES (%s)', tableName, fields,params);
     }
     else  if(action == 'u') {
 
         // no fields to write in sql table
-        var fields = this.getUpdateFields(tableName,doc);
+        var fields = this.getUpdateFields(tableName,doc).wait();
+        //console.log(fields);
         // no fields to write in sql table
         if(fields == '')
             return '';
@@ -74,81 +81,134 @@ SqlCommandManager.prototype.getFilter = function(tableName) {
 // :fieldName1, fieldNamen (if asParam == true)
 SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) {
     var self = this;
-    var result = '';
-    var field = null;
-    for (var item in doc.o) {
 
-        if(doc.o[item].constructor == {}.constructor) {
-            for(var item2 in doc.o[item]) {
-                field = self.dbTables.field(tableName, item, item2).wait();
-                // for nested value  linkFieldName is mandatory
-                if(field && field.linkFieldName)
-                   result+= asParam ? ':'+item+'_'+item2+',' : field.linkFieldName+',';
+    var future = new Future();
+    Fiber(function () {
+        var result = '';
+        var field = null;
+        for (var item in doc.o) {
+
+            if (doc.o[item] && doc.o[item].constructor == {}.constructor) {
+                for (var item2 in doc.o[item]) {
+                    field = self.dbTables.field(tableName, item, item2);
+                    // for nested value  linkFieldName is mandatory
+                    if (field && field.linkFieldName)
+                        result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
+                }
             }
-        }
-        else {
-            field = self.dbTables.field(tableName, item);
-            if(field)
-              result += asParam ? ':' + item + ',' : (field.linkFieldName || item)+ ',';
-            else
-            {
-                field = self.dbTables.field(tableName, '$DEF');
-                if(field != null) {
-                    field = self.dbTables.tableField(tableName, doc.o['_id'], item).wait();
-                    if(field)
-                        result += util.format(" %s = :%s,", field.linkFieldName || item, item);
+            else {
+                field = self.dbTables.field(tableName, item);
+                if (field)
+                    result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
+                else {
+                    field = self.dbTables.field(tableName, '$DEF');
+                    if (field != null) {
+                        field = self.dbTables.tableField(tableName, doc.o['_id'], item).wait();
+                        if (field) {
+                            result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
+                            self.attrFields.push(_.extend({}, field));
+                        }
 
+                    }
                 }
             }
         }
-    }
-    result = result.slice(0, -1);
-    return result;
-};
+        result = result.slice(0, -1);
+        future.return(result);
+    }).run();
+    return future.wait();
+}.future();
 
 // Return list of field as
 // 'fieldName1, fieldName
 // :fieldName1, fieldNamen (if asParam == true)
 SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
-    var result = '';
-    var field = '';
+    //var field = '';
     var self = this;
 
-    var set = _.extend({}, doc.o.$set || doc.o);
-    //console.log(set);
-    for (var item in set) {
+    //var set = _.extend({}, doc.o.$set || doc.o);
 
-        if(set[item].constructor == {}.constructor) {
-            for (var item2 in set[item]) {
-                field = self.dbTables.field(tableName, item, item2);
-                // for nested value  linkFieldName is mandatory
-                if(field && field.linkFieldName)
-                  result += util.format(" %s = :%s,",field.linkFieldName, item+'_'+item2);
+
+    var future = new Future();
+    Fiber(function () {
+        var result = '';
+        var field;
+        var set = _.extend({}, doc.o.$set || doc.o);
+
+        for (var item in set) {
+
+            if(set[item] && set[item].constructor == {}.constructor) {
+                for (var item2 in set[item]) {
+                    field = self.dbTables.field(tableName, item, item2);
+                    // for nested value  linkFieldName is mandatory
+                    if(field && field.linkFieldName)
+                      result += util.format(" %s = :%s,",field.linkFieldName, item+'_'+item2);
+                }
             }
-        }
-        else {
-            field = self.dbTables.field(tableName, item);
-            if(field)
-              result += util.format(" %s = :%s,", field.linkFieldName || item, item);
-            else
-            {
-                field = self.dbTables.field(tableName, '$DEF');
-                if(field != null) {
-                    field = self.dbTables.tableField(tableName, doc.o2['_id'], item).wait();
-                    if(field)
-                        result += util.format(" %s = :%s,", field.linkFieldName || item, item);
+            else {
+                field = self.dbTables.field(tableName, item);
+                if(field)
+                  result += util.format(" %s = :%s,", field.linkFieldName || item, item);
+                else
+                {
+                    field = self.dbTables.field(tableName, '$DEF');
+                    if(field != null) {
+                        field = self.dbTables.tableField(tableName, doc.o2['_id'], item).wait();
+                        if(field) {
+                            result += util.format(" %s = :%s,", field.linkFieldName || item, item);
+                            self.attrFields.push(_.extend({}, field));
+                        }
 
+                    }
                 }
             }
         }
+        if(result != '')
+            result = result.slice(0, -1);
+        future.return(result);
+    }).run();
 
-    }
-    if(result != '')
-      result = result.slice(0, -1);
+    return future.wait();
+}.future();
 
+/*
+SqlCommandManager.prototype.getFields = function(tableName, fields) {
+    var wait = Future.wait;
+    var result = '';
+    var self = this;
+    Fiber(function () {
+        var field;
+        for (var item in fields) {
+            if(fields[item].constructor == {}.constructor) {
+                for(var item2 in fields[item]) {
+                    field = self.dbTables.field(tableName, item, item2).wait();
+                    // for nested value  linkFieldName is mandatory
+                    if(field && field.linkFieldName)
+                        result+= asParam ? ':'+item+'_'+item2+',' : field.linkFieldName+',';
+                }
+            }
+            else {
+                field = self.dbTables.field(tableName, item);
+                if(field)
+                    result += asParam ? ':' + item + ',' : (field.linkFieldName || item)+ ',';
+                else
+                {
+                    field = self.dbTables.field(tableName, '$DEF');
+                    if(field != null) {
+                        field = self.dbTables.tableField(tableName, fields['_id'], item).wait();
+                        if(field)
+                            result += util.format(" %s = :%s,", field.linkFieldName || item, item);
+
+                    }
+                }
+            }
+        }
+    }).run();
+    console.log('end getfields');
+    console.log(result);
     return result;
-};
-
+}
+*/
 
 SequelizeCommandManager = function(connection, dbTables) {
     SqlCommandManager.call(this, connection, dbTables);
@@ -195,7 +255,9 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
         else if(action == 'd')
             record['_id'] = doc.o['_id'].toString();
 
-        this.dbTables.normalizeRecord(tableName, record);
+        if(action != 'd') {
+            this.dbTables.normalizeRecord(tableName, record, self.attrFields);
+        }
 
         future.return(this.command.execSql(sql, record, action).wait());
         return future.wait();

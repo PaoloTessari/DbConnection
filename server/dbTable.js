@@ -55,17 +55,17 @@ DbTables.prototype.tableField = function(tableName,id,fieldName) {
     var self = this;
     var future = new Future();
     self.localConnection.dbInstance.collection(tableName).find({_id: id}).toArray(function(err, docs) {
-        console.log(err);
-        console.log(docs);
+        //console.log(err);
+        //console.log(docs);
         var doc = docs.length == 1 ? _.extend({}, docs[0]) : {};
         var field = null;
 
         if (doc) {
 
             var rec;
-            console.log("Found the following record ");
-            console.dir(doc);
-            console.log('defid:'+doc['defid']);
+            //console.log("Found the following record ");
+            //console.dir(doc);
+            //console.log('defid:'+doc['defid']);
 
             /*
             rec = _.find(self.localDef, function (rec) {
@@ -76,21 +76,31 @@ DbTables.prototype.tableField = function(tableName,id,fieldName) {
             self.localConnection.dbInstance.collection('def').find({_id: doc['defid']}).toArray(function(err, docs) {
                 //if (rec != null) {
                 rec = docs[0];
-                console.log('def record');
-                console.log(rec);
-                var fld = _.find(rec.params.fields, function (field) {
-                    return (field.aliasName.toUpperCase() == fieldName.toUpperCase())
-                })
+                //console.log('def record');
+                if(rec) {
+                    //console.log(rec);
+                    var fld = _.find(rec.params.fields, function (field) {
+                        return (field.aliasName.toUpperCase() == fieldName.toUpperCase())
+                    })
 
-                if (fld != null && fld.fieldName.slice(0, 4).toUpperCase() == 'ATTR') {
-                    field = {};
-                    field.fieldName = fld.aliasName;
-                    field.linkFieldName = fld.fieldName;
-                    console.log(fld);
-                    future.return(field);
+                    if (fld != null && fld.fieldName.slice(0, 4).toUpperCase() == 'ATTR') {
+                        field = {};
+                        field.fieldName = fld.aliasName;
+                        field.linkFieldName = fld.fieldName;
+                        field.fieldType =
+                             fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRN' ? 'NUMBER' :
+                             fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRC' ? 'STRING' :
+                             fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRD' ? 'ISODATE' :
+                             'STRING';
+                        //console.log(fld);
+                        future.return(field);
+                    }
+                    else
+                        future.return(null);
                 }
                 else
-                  future.return(null);
+                    future.return(null);
+
             });
         }
 
@@ -99,12 +109,12 @@ DbTables.prototype.tableField = function(tableName,id,fieldName) {
 }.future();
 
 
-DbTables.prototype.normalizeRecord = function(tableName, record) {
+DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
     var self = this;
     try {
         for (var fieldName in record) {
 
-            if(record[fieldName].constructor == {}.constructor) {
+            if(record[fieldName] && record[fieldName].constructor == {}.constructor) {
                 for (var item2 in record[fieldName]) {
                     var field = self.field(tableName,fieldName+'.'+item2);
                     if(field != null)
@@ -116,8 +126,17 @@ DbTables.prototype.normalizeRecord = function(tableName, record) {
                 field = self.field(tableName,fieldName);
                 if(field != null)
                     record[fieldName] = self.normalizeFieldValue(field, record[fieldName]);
-                else
-                    delete record[fieldName];
+                else {
+                    var field =  _.find(attrFields, function(field) {
+                        return (field.fieldName.toUpperCase() == fieldName.toUpperCase() || null);
+                    })
+
+                    if(field != null) {
+                        record[fieldName] = self.normalizeFieldValue(field, record[fieldName]);
+                    }
+                    else
+                      delete record[fieldName];
+                }
             }
         }
         //console.log('normalizeValues');
@@ -141,7 +160,7 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
       return value || null;
 
     try {
-        if (field.fieldType.toUpperCase() == 'ISODATE') {
+        if (field.fieldType &&  field.fieldType.toUpperCase() == 'ISODATE') {
             if(value) {
                 try {
                     var date = new Date(value);
@@ -152,17 +171,20 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
                 }
             }
         }
-        else if (field.fieldType.toUpperCase() == 'OBJECT') {
+        else if (field.fieldType &&  field.fieldType.toUpperCase() == 'OBJECT') {
             result  = value ? value.toString() : null;
         }
-        else if (field.fieldType.toUpperCase() == 'ARRAY') {
+        else if (field.fieldType &&  field.fieldType.toUpperCase() == 'ARRAY') {
             if (value) {
                 for (var obj in value)
                     result += obj + ' ';
             }
         }
+        else if (field.fieldType &&  field.fieldType.toUpperCase() == 'NUMBER') {
+            result = value ? parseInt(value.toString()) : null;
+        }
         else {
-            result  = value ||  field.default || null;
+            result  = value || null;
         }
         return result;
     }
@@ -195,6 +217,7 @@ DbTables.prototype.loadLocalDef = function() {
 }.future();
 
 
+/*
 DbTables.prototype.openDefCursor = function() {
     try {
         self = this;
@@ -211,7 +234,7 @@ DbTables.prototype.openDefCursor = function() {
     }
 
 }.future();
-
+*/
 /*
 DbTables.prototype.observeLocalDef = function() {
 self = this;
