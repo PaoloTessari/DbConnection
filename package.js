@@ -22,7 +22,8 @@ Npm.depends({
     //"mongo-oplog": "1.0.1",
     "fibers": "1.0.5",
     "future": "2.3.1",
-    "date-format-lite": "0.7.4"
+    "date-format-lite": "0.7.4",
+    "async" : "1.5.2"
     //"async" : "1.5.0"
 });
 

@@ -37,14 +37,10 @@ SequelizeCommand.prototype = Object.create(SqlCommand.prototype);
 SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
 
     var self = this;
-    console.log('replacements');
-    console.dir(replacements);
-
     try {
-        //var sql = self.normalizeSql(sql);
-        var sql = sql;
-        var replacements = _.extend({}, replacements);
-        var action = action;
+        //var sql = sql;
+        //var replacements = _.extend({}, replacements);
+        //var action = action;
 
         var future = new Future();
         this.conn.getInstance().query(sql,
@@ -56,7 +52,7 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
                     action == 'd' ? Sequelize.QueryTypes.DELETE : ''
             }
         ).then(function (rec) {
-                console.log("[OK] execSql: " + sql);
+                //console.log("[OK] execSql: " + sql);
                 future.return(true)
             }, function (err) {
                 console.log("**[KO] execSql: " + err.message+' '+sql);
