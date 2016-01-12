@@ -21,7 +21,7 @@ DbConnectionManager.prototype.getConnectionString = function(alias) {
 
 }
 
-DbConnectionManager.prototype.open = function(alias) {
+DbConnectionManager.prototype.open = function(alias, callback) {
 
     var self = this;
     var future = new Future();

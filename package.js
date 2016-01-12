@@ -1,6 +1,6 @@
 Package.describe({
   name: "link:dbaccess",
-  version: "1.2.2",
+  version: "1.0.0",
   // Brief, one-line summary of the package.
   summary: "dbaccess",
   // URL to the Git repository containing the source code for this package.
@@ -19,36 +19,26 @@ Npm.depends({
     "tedious": "1.13.1",
     "pg": "4.4.3",
     "pg-hstore": "2.3.2",
-    //"mongo-oplog": "1.0.1",
     "fibers": "1.0.5",
     "future": "2.3.1",
     "date-format-lite": "0.7.4",
     "async" : "1.5.2"
-    //"async" : "1.5.0"
 });
 
 Package.onUse(function(api) {
   api.versionsFrom("1.2.1");
   api.use("ecmascript");
   api.use("underscore", "server");
-  //api.use("nimble:restivus", "server");
-  //api.use("iron:router@1.0.12");
-  //api.addFiles("server/dbDocDef.js");
   api.addFiles("server/dbCommand.js");
   api.addFiles("server/dbCommandManager.js");
   api.addFiles("server/dbConnection.js")
   api.addFiles("server/dbConnectionManager.js");
-  //api.addFiles("server/dbUtil.js");
   api.addFiles("server/dbTable.js");
   api.export("DbConnectionManager", "server");
   api.export("SqlCommandManager", "server");
   api.export("SequelizeCommandManager", "server");
   api.export("OpSequelizeCommandManager", "server");
-  //api.export("DbUtil", "server");
   api.export("DbTables", "server");
-  //api.export("DbTable", "server");
-  //api.export("DbRow", "server");
-  //api.export("DbDef", "server");
 });
 
 /*

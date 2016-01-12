@@ -26,6 +26,7 @@ SqlCommandManager.prototype = Object.create(DbCommandManager.prototype);
 
 
 SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
+    var future = new Future();
     var sql = ''
     if(action == 'i') {
         var fields =  this.getInsertFields(tableName,doc, false).wait();
@@ -33,13 +34,13 @@ SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
         //console.log('fields:'+fields)
         // no fields to write in sql table
         if(fields == '')
-            return '';
+            future.return( '');
 
 
         var params = this.getInsertFields(tableName,doc, true).wait();
         //console.log('params:'+params)
 
-        return util.format('INSERT INTO %s (%s) VALUES (%s)', tableName, fields,params);
+        future.return(util.format('INSERT INTO %s (%s) VALUES (%s)', tableName, fields,params));
     }
     else  if(action == 'u') {
 
@@ -48,33 +49,33 @@ SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
         //console.log(fields);
         // no fields to write in sql table
         if(fields == '')
-            return '';
+            future.return( '');
 
-        return util.format("UPDATE %s set %s %s", tableName, fields, this.getFilter(tableName));
+        future.return( util.format("UPDATE %s set %s %s", tableName, fields, this.getFilter(tableName)));
     }
     else  if(action == 'd') {
-        return util.format("DELETE FROM  %s %s ", tableName, this.getFilter(tableName));
+        future.return( util.format("DELETE FROM  %s %s ", tableName, this.getFilter(tableName)));
     }
-
-}
+    return future.wait();
+}.future();
 
 SqlCommandManager.prototype.prepareInsert = function(tableName, doc) {
 
-  return this,prepareSql(tableName,doc, 'i');
-};
+  return this.prepareSql(tableName,doc, 'i').wait();
+}
 
 SqlCommandManager.prototype.prepareUpdate = function(tableName, doc) {
 
-    return this.prepareSql(tableName,doc, 'u');
-};
+    return this.prepareSql(tableName,doc, 'u').wait();
+}
 
 SqlCommandManager.prototype.prepareDelete = function(tableName) {
-    return this.prepareSql(tableName,doc, 'd');
-};
+    return this.prepareSql(tableName,doc, 'd').wait();
+}
 
 SqlCommandManager.prototype.getFilter = function(tableName) {
     return (' WHERE mid = :_id');
-};
+}
 
 // Return list of field as
 // 'fieldName1, fieldName
@@ -92,7 +93,7 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
                 for (var item2 in doc.o[item]) {
                     field = self.dbTables.field(tableName, item, item2);
                     // for nested value  linkFieldName is mandatory
-                    if (field && field.linkFieldName)
+                    if (field && field.linkFieldName && self.isValidFieldName(field.linkFieldName))
                         result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
                 }
             }
@@ -104,7 +105,7 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
                     field = self.dbTables.field(tableName, '$DEF');
                     if (field != null) {
                         field = self.dbTables.tableField(tableName, doc.o['_id'], item).wait();
-                        if (field) {
+                        if (field &&  self.isValidFieldName(field.linkFieldName)) {
                             result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
                             self.attrFields.push(_.extend({}, field));
                         }
@@ -141,20 +142,20 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
                 for (var item2 in set[item]) {
                     field = self.dbTables.field(tableName, item, item2);
                     // for nested value  linkFieldName is mandatory
-                    if(field && field.linkFieldName)
+                    if(field && field.linkFieldName &&  self.isValidFieldName(field.linkFieldName))
                       result += util.format(" %s = :%s,",field.linkFieldName, item+'_'+item2);
                 }
             }
             else {
                 field = self.dbTables.field(tableName, item);
-                if(field)
+                if(field && self.isValidFieldName(field.linkFieldName || item))
                   result += util.format(" %s = :%s,", field.linkFieldName || item, item);
                 else
                 {
                     field = self.dbTables.field(tableName, '$DEF');
                     if(field != null) {
                         field = self.dbTables.tableField(tableName, doc.o2['_id'], item).wait();
-                        if(field) {
+                        if(field && self.isValidFieldName(field.linkFieldName)) {
                             result += util.format(" %s = :%s,", field.linkFieldName || item, item);
                             self.attrFields.push(_.extend({}, field));
                         }
@@ -210,6 +211,12 @@ SqlCommandManager.prototype.getFields = function(tableName, fields) {
 }
 */
 
+SqlCommandManager.prototype.isValidFieldName = function(fieldName) {
+    return true;
+
+}
+
+
 SequelizeCommandManager = function(connection, dbTables) {
     SqlCommandManager.call(this, connection, dbTables);
 
@@ -233,6 +240,11 @@ SequelizeCommandManager.prototype.execSql = function(sql, doc, action) {
       }
 }.future();
 
+SqlCommandManager.prototype.isValidFieldName = function(fieldName) {
+    return fieldName.toUpperCase().slice(0, 7) != 'DECODE_' &&
+        fieldName.toUpperCase().slice(0, 5) != 'CALC_'
+
+}
 
 
 OpSequelizeCommandManager = function(connection, dbTables) {
@@ -278,6 +290,8 @@ OpSequelizeCommandManager.prototype.prepareUpdate = function(tableName, doc) {
 OpSequelizeCommandManager.prototype.prepareDelete = function(tableName, doc) {
     return this.prepareSql(tableName,doc, 'd');
 }
+
+
 
 
 
