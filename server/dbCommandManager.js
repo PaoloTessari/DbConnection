@@ -50,8 +50,8 @@ SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
         // no fields to write in sql table
         if(fields == '')
             future.return( '');
-
-        future.return( util.format("UPDATE %s set %s %s", tableName, fields, this.getFilter(tableName)));
+         else
+           future.return( util.format("UPDATE %s set %s %s", tableName, fields, this.getFilter(tableName)));
     }
     else  if(action == 'd') {
         future.return( util.format("DELETE FROM  %s %s ", tableName, this.getFilter(tableName)));
@@ -59,6 +59,10 @@ SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
     return future.wait();
 }.future();
 
+
+/*
+
+/*
 SqlCommandManager.prototype.prepareInsert = function(tableName, doc) {
 
   return this.prepareSql(tableName,doc, 'i').wait();
@@ -72,6 +76,7 @@ SqlCommandManager.prototype.prepareUpdate = function(tableName, doc) {
 SqlCommandManager.prototype.prepareDelete = function(tableName) {
     return this.prepareSql(tableName,doc, 'd').wait();
 }
+*/
 
 SqlCommandManager.prototype.getFilter = function(tableName) {
     return (' WHERE mid = :_id');
@@ -93,7 +98,7 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
                 for (var item2 in doc.o[item]) {
                     field = self.dbTables.field(tableName, item, item2);
                     // for nested value  linkFieldName is mandatory
-                    if (field && field.linkFieldName && self.isValidFieldName(field.linkFieldName))
+                    if (field && field.linkFieldName && self.isPhysicalFieldName(field.linkFieldName))
                         result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
                 }
             }
@@ -104,8 +109,8 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
                 else {
                     field = self.dbTables.field(tableName, '$DEF');
                     if (field != null) {
-                        field = self.dbTables.tableField(tableName, doc.o['_id'], item).wait();
-                        if (field &&  self.isValidFieldName(field.linkFieldName)) {
+                        field = self.dbTables.tableField(tableName, doc.o['defid'], item).wait();
+                        if (field &&  self.isPhysicalFieldName(field.linkFieldName)) {
                             result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
                             self.attrFields.push(_.extend({}, field));
                         }
@@ -135,27 +140,34 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
         var result = '';
         var field;
         var set = _.extend({}, doc.o.$set || doc.o);
+        var defid = null;
 
+        if(self.dbTables.field(tableName, '$DEF') != null) {
+            console.log( doc.o2['_id']);
+            defid = self.dbTables.getDefId(tableName, doc.o2['_id']).wait();
+            console.log('defid' + defid);
+        }
         for (var item in set) {
 
             if(set[item] && set[item].constructor == {}.constructor) {
                 for (var item2 in set[item]) {
                     field = self.dbTables.field(tableName, item, item2);
                     // for nested value  linkFieldName is mandatory
-                    if(field && field.linkFieldName &&  self.isValidFieldName(field.linkFieldName))
+                    if(field && field.linkFieldName &&  self.isPhysicalFieldName(field.linkFieldName))
                       result += util.format(" %s = :%s,",field.linkFieldName, item+'_'+item2);
                 }
             }
             else {
                 field = self.dbTables.field(tableName, item);
-                if(field && self.isValidFieldName(field.linkFieldName || item))
+                if(field && self.isPhysicalFieldName(field.linkFieldName || item))
                   result += util.format(" %s = :%s,", field.linkFieldName || item, item);
                 else
                 {
-                    field = self.dbTables.field(tableName, '$DEF');
-                    if(field != null) {
-                        field = self.dbTables.tableField(tableName, doc.o2['_id'], item).wait();
-                        if(field && self.isValidFieldName(field.linkFieldName)) {
+                    //field = self.dbTables.field(tableName, '$DEF');
+                    //if(field != null) {
+                    if(defid) {
+                        field = self.dbTables.tableField(tableName, defid, item).wait();
+                        if(field && self.isPhysicalFieldName(field.linkFieldName)) {
                             result += util.format(" %s = :%s,", field.linkFieldName || item, item);
                             self.attrFields.push(_.extend({}, field));
                         }
@@ -211,7 +223,7 @@ SqlCommandManager.prototype.getFields = function(tableName, fields) {
 }
 */
 
-SqlCommandManager.prototype.isValidFieldName = function(fieldName) {
+SqlCommandManager.prototype.isPhysicalFieldName = function(fieldName) {
     return true;
 
 }
@@ -240,7 +252,8 @@ SequelizeCommandManager.prototype.execSql = function(sql, doc, action) {
       }
 }.future();
 
-SqlCommandManager.prototype.isValidFieldName = function(fieldName) {
+
+SequelizeCommandManager.prototype.isPhysicalFieldName = function(fieldName) {
     return fieldName.toUpperCase().slice(0, 7) != 'DECODE_' &&
         fieldName.toUpperCase().slice(0, 5) != 'CALC_'
 
@@ -268,7 +281,7 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
             record['_id'] = doc.o['_id'].toString();
 
         if(action != 'd') {
-            this.dbTables.normalizeRecord(tableName, record, self.attrFields);
+            record = this.dbTables.normalizeRecord(tableName, record, self.attrFields).wait();
         }
 
         future.return(this.command.execSql(sql, record, action).wait());
@@ -279,6 +292,8 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
     }
 }.future();
 
+
+/*
 OpSequelizeCommandManager.prototype.prepareInsert = function(tableName, doc) {
    return this.prepareSql(tableName,doc, 'i');
 }
@@ -290,7 +305,7 @@ OpSequelizeCommandManager.prototype.prepareUpdate = function(tableName, doc) {
 OpSequelizeCommandManager.prototype.prepareDelete = function(tableName, doc) {
     return this.prepareSql(tableName,doc, 'd');
 }
-
+*/
 
 
 

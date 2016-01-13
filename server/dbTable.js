@@ -1,3 +1,5 @@
+"use strict";
+
 var DateFormat = Npm.require("date-format-lite");
 var Future = Npm.require('fibers/future');
 var mongo = Npm.require('mongodb')
@@ -40,46 +42,97 @@ DbTables.prototype.field = function(tableName, fieldName1, fieldName2) {
      return field;
 };
 
+
+DbTables.prototype.getDefId = function(tableName,id) {
+
+    // todo try catch
+    var self = this;
+    var future = new Future();
+    self.localConnection.dbInstance.collection(tableName).find({_id: id}).toArray(function(err, docs) {
+
+        future.return(docs.length == 1 ? docs[0]['defid'] : null);
+
+
+    });
+    return future.wait();
+}.future();
+
+DbTables.prototype.tableField = function(tableName,defid,fieldName) {
+
+    var self = this;
+
+    var future = new Future();
+
+    self.localConnection.dbInstance.collection('def').find({_id: defid}).toArray(function(err, docs) {
+
+        var doc = docs.length == 1 ?  docs[0] : null;
+        if(doc) {
+            //console.log(rec);
+            var fld = _.find(doc.params.fields, function (field) {
+                return (field.aliasName.toUpperCase() == fieldName.toUpperCase())
+            })
+
+            if (fld != null && fld.fieldName.slice(0, 4).toUpperCase() == 'ATTR') {
+                var field = {};
+                field.fieldName = fld.aliasName;
+                field.linkFieldName = fld.fieldName;
+                field.fieldType =
+                     fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRN' ? 'NUMBER' :
+                     fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRC' ? 'STRING' :
+                     fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRD' ? 'ISODATE' :
+                     'STRING';
+                //console.log(fld);
+                future.return(field);
+            }
+            else
+                future.return(null);
+        }
+        else
+            future.return(null);
+
+    });
+
+
+
+    return future.wait();
+}.future();
+
+/*
 DbTables.prototype.tableField = function(tableName,id,fieldName) {
 
-    /*
-    var cursor = self.localConnection.dbInstance.collection(tableName).find({_id: id})
-    cursor.each(function(document) {
-        console.dir(document);
-        doc = mongo.bson.shallowClone(document);
-    });
-    console.log(doc);
 
-    */
 
     var self = this;
     var future = new Future();
     self.localConnection.dbInstance.collection(tableName).find({_id: id}).toArray(function(err, docs) {
         //console.log(err);
         //console.log(docs);
-        var doc = docs.length == 1 ? _.extend({}, docs[0]) : {};
+        //var doc = docs.length == 1 ? _.extend({}, docs[0]) : {};
+        var doc = docs.length == 1 ?  docs[0] : null;
         var field = null;
 
         if (doc) {
 
-            var rec;
+            //var rec;
             //console.log("Found the following record ");
             //console.dir(doc);
             //console.log('defid:'+doc['defid']);
 
             /*
-            rec = _.find(self.localDef, function (rec) {
-                return (rec['_id'] == doc['defid'] || null);
+             rec = _.find(self.localDef, function (rec) {
+             return (rec['_id'] == doc['defid'] || null);
 
-            })
-            */
+             })
+             */
+/*
             self.localConnection.dbInstance.collection('def').find({_id: doc['defid']}).toArray(function(err, docs) {
                 //if (rec != null) {
-                rec = docs[0];
+                //rec = docs[0];
                 //console.log('def record');
-                if(rec) {
+                var doc = docs.length == 1 ?  docs[0] : null;
+                if(doc) {
                     //console.log(rec);
-                    var fld = _.find(rec.params.fields, function (field) {
+                    var fld = _.find(doc.params.fields, function (field) {
                         return (field.aliasName.toUpperCase() == fieldName.toUpperCase())
                     })
 
@@ -88,10 +141,10 @@ DbTables.prototype.tableField = function(tableName,id,fieldName) {
                         field.fieldName = fld.aliasName;
                         field.linkFieldName = fld.fieldName;
                         field.fieldType =
-                             fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRN' ? 'NUMBER' :
-                             fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRC' ? 'STRING' :
-                             fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRD' ? 'ISODATE' :
-                             'STRING';
+                            fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRN' ? 'NUMBER' :
+                                fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRC' ? 'STRING' :
+                                    fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRD' ? 'ISODATE' :
+                                        'STRING';
                         //console.log(fld);
                         future.return(field);
                     }
@@ -106,11 +159,13 @@ DbTables.prototype.tableField = function(tableName,id,fieldName) {
 
     });
     return future.wait();
-}.future();
 
+}.future();
+*/
 
 DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
     var self = this;
+    var future = new Future();
     try {
         for (var fieldName in record) {
 
@@ -141,15 +196,20 @@ DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
         }
         //console.log('normalizeValues');
         //console.log(record);
-        return  record;
+        future.return(record);
     }
     catch(e) {
         console.log(e)
-        throw(e);
+        //throw(e);
         //return record;
+        future.return(record);
+
+    }
+    finally {
+        return future.wait();
     }
 
-};
+}.future();
 
 DbTables.prototype.normalizeFieldValue = function (field, value) {
     var self = this;
@@ -181,7 +241,8 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
             }
         }
         else if (field.fieldType &&  field.fieldType.toUpperCase() == 'NUMBER') {
-            result = value ? parseInt(value.toString()) : null;
+            result = _.isNaN(Number(value)) ? 0 : Number(value);
+            //console.log(result);
         }
         else {
             result  = value || null;
@@ -194,10 +255,10 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
     }
 };
 
-
+/*
 DbTables.prototype.loadLocalDef = function() {
     try {
-          self = this;
+          var self = this;
 
           var future = new Future();
           self.localConnection.dbInstance.collection("def").find({}).toArray(function(err, docs) {
@@ -215,7 +276,7 @@ DbTables.prototype.loadLocalDef = function() {
     }
 
 }.future();
-
+*/
 
 /*
 DbTables.prototype.openDefCursor = function() {

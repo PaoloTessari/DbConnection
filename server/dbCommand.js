@@ -38,9 +38,6 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
 
     var self = this;
     try {
-        //var sql = sql;
-        //var replacements = _.extend({}, replacements);
-        //var action = action;
 
         var future = new Future();
         this.conn.getInstance().query(sql,
