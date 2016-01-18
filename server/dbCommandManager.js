@@ -1,6 +1,7 @@
 var util = Npm.require("util");
 var Future = Npm.require('fibers/future');
 var Fiber = Npm.require('fibers');
+var async = Npm.require('async');
 
 
 DbCommandManager = function(connection) {
@@ -136,6 +137,8 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
 
 
     var future = new Future();
+
+
     Fiber(function () {
         var result = '';
         var field;
@@ -293,19 +296,6 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
 }.future();
 
 
-/*
-OpSequelizeCommandManager.prototype.prepareInsert = function(tableName, doc) {
-   return this.prepareSql(tableName,doc, 'i');
-}
-
-OpSequelizeCommandManager.prototype.prepareUpdate = function(tableName, doc) {
-    return this.prepareSql(tableName,doc, 'u');
-}
-
-OpSequelizeCommandManager.prototype.prepareDelete = function(tableName, doc) {
-    return this.prepareSql(tableName,doc, 'd');
-}
-*/
 
 
 

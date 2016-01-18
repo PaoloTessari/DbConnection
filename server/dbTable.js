@@ -1,8 +1,10 @@
-"use strict";
+//"use strict";
 
 var DateFormat = Npm.require("date-format-lite");
 var Future = Npm.require('fibers/future');
 var mongo = Npm.require('mongodb')
+
+
 
 /* settings: Meteor.settings.Def.Collections) */
 DbTables = function(settings, localConnection) {
