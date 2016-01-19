@@ -44,7 +44,7 @@ DbTables.prototype.field = function(tableName, fieldName1, fieldName2) {
      return field;
 };
 
-
+/*
 DbTables.prototype.getDefId = function(tableName,id) {
 
     // todo try catch
@@ -58,12 +58,26 @@ DbTables.prototype.getDefId = function(tableName,id) {
     });
     return future.wait();
 }.future();
+*/
+DbTables.prototype.getDefId = function(tableName,id, callback) {
+    if(this. field(tableName, '$DEF') == null) {
+        callback(null);
+    }
+    else
+    {
+        var self = this;
+        self.localConnection.dbInstance.collection(tableName).find({_id: id}, { defid: 1 }).toArray(function (err, docs) {
 
-DbTables.prototype.tableField = function(tableName,defid,fieldName) {
+            callback(docs.length == 1 ? docs[0]['defid'] : null);
+        });
+    }
+}
+
+DbTables.prototype.tableField = function(tableName,defid,fieldName, callback) {
 
     var self = this;
 
-    var future = new Future();
+
 
     self.localConnection.dbInstance.collection('def').find({_id: defid}).toArray(function(err, docs) {
 
@@ -84,90 +98,22 @@ DbTables.prototype.tableField = function(tableName,defid,fieldName) {
                      fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRD' ? 'ISODATE' :
                      'STRING';
                 //console.log(fld);
-                future.return(field);
+                callback(field);
             }
             else
-                future.return(null);
+               callback(null);
         }
         else
-            future.return(null);
+            callback(null);
 
     });
 
 
+}
 
-    return future.wait();
-}.future();
-
-/*
-DbTables.prototype.tableField = function(tableName,id,fieldName) {
-
-
-
-    var self = this;
-    var future = new Future();
-    self.localConnection.dbInstance.collection(tableName).find({_id: id}).toArray(function(err, docs) {
-        //console.log(err);
-        //console.log(docs);
-        //var doc = docs.length == 1 ? _.extend({}, docs[0]) : {};
-        var doc = docs.length == 1 ?  docs[0] : null;
-        var field = null;
-
-        if (doc) {
-
-            //var rec;
-            //console.log("Found the following record ");
-            //console.dir(doc);
-            //console.log('defid:'+doc['defid']);
-
-            /*
-             rec = _.find(self.localDef, function (rec) {
-             return (rec['_id'] == doc['defid'] || null);
-
-             })
-             */
-/*
-            self.localConnection.dbInstance.collection('def').find({_id: doc['defid']}).toArray(function(err, docs) {
-                //if (rec != null) {
-                //rec = docs[0];
-                //console.log('def record');
-                var doc = docs.length == 1 ?  docs[0] : null;
-                if(doc) {
-                    //console.log(rec);
-                    var fld = _.find(doc.params.fields, function (field) {
-                        return (field.aliasName.toUpperCase() == fieldName.toUpperCase())
-                    })
-
-                    if (fld != null && fld.fieldName.slice(0, 4).toUpperCase() == 'ATTR') {
-                        field = {};
-                        field.fieldName = fld.aliasName;
-                        field.linkFieldName = fld.fieldName;
-                        field.fieldType =
-                            fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRN' ? 'NUMBER' :
-                                fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRC' ? 'STRING' :
-                                    fld.fieldName.slice(0, 5).toUpperCase() == 'ATTRD' ? 'ISODATE' :
-                                        'STRING';
-                        //console.log(fld);
-                        future.return(field);
-                    }
-                    else
-                        future.return(null);
-                }
-                else
-                    future.return(null);
-
-            });
-        }
-
-    });
-    return future.wait();
-
-}.future();
-*/
 
 DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
     var self = this;
-    var future = new Future();
     try {
         for (var fieldName in record) {
 
@@ -196,6 +142,50 @@ DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
                 }
             }
         }
+    }
+    catch(e) {
+        console.log(e)
+
+    }
+    finally {
+        return record;
+    }
+
+}
+
+
+/*
+DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
+    var self = this;
+    var future = new Future();
+    try {
+        for (var fieldName in record) {
+
+            if(record[fieldName] && record[fieldName].constructor == {}.constructor) {
+                for (var item2 in record[fieldName]) {
+                    var field = self.field(tableName,fieldName+'.'+item2);
+                    if(field != null)
+                        record[fieldName+'_'+item2] = self.normalizeFieldValue(field, record[fieldName][item2]);
+                }
+                delete record[fieldName];
+            }
+            else {
+                field = self.field(tableName,fieldName);
+                if(field != null)
+                    record[fieldName] = self.normalizeFieldValue(field, record[fieldName]);
+                else {
+                    var field =  _.find(attrFields, function(field) {
+                        return (field.fieldName.toUpperCase() == fieldName.toUpperCase() || null);
+                    })
+
+                    if(field != null) {
+                        record[fieldName] = self.normalizeFieldValue(field, record[fieldName]);
+                    }
+                    else
+                        delete record[fieldName];
+                }
+            }
+        }
         //console.log('normalizeValues');
         //console.log(record);
         future.return(record);
@@ -212,6 +202,8 @@ DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
     }
 
 }.future();
+*/
+
 
 DbTables.prototype.normalizeFieldValue = function (field, value) {
     var self = this;

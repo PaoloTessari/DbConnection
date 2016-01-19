@@ -33,7 +33,7 @@ SequelizeCommand = function(DbConnection) {
 SequelizeCommand.prototype = Object.create(SqlCommand.prototype);
 
 
-// action : sequelize.QueryTypes.INSERT
+
 SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
 
     var self = this;
@@ -45,8 +45,8 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
                 replacements: replacements,
                 type:
                     action == 'i' ? Sequelize.QueryTypes.INSERT :
-                    action == 'u' ? Sequelize.QueryTypes.UPDATE :
-                    action == 'd' ? Sequelize.QueryTypes.DELETE : ''
+                        action == 'u' ? Sequelize.QueryTypes.UPDATE :
+                            action == 'd' ? Sequelize.QueryTypes.DELETE : ''
             }
         ).then(function (rec) {
                 //console.log("[OK] execSql: " + sql);
@@ -67,5 +67,3 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
         return future.wait();
     }
 }.future();
-
-
