@@ -1,3 +1,4 @@
+//"use strict";
 
 var Future = Npm.require('fibers/future');
 
@@ -9,9 +10,9 @@ DbConnectionManager = function(settingConnections) {
 };
 
 
-
+/*
 DbConnectionManager.prototype.getConnectionString = function(alias) {
-    "use strict";
+
     if(this.settings[alias].dialect == 'mongo') {
       return 'mongodb://'+this.settings[alias].host+':'+this.settings[alias].port+'/'+this.settings[alias].db;
     }
@@ -19,7 +20,8 @@ DbConnectionManager.prototype.getConnectionString = function(alias) {
       return "todo sql connection string"
 
 
-}
+};
+*/
 
 DbConnectionManager.prototype.open = function(alias, callback) {
 
@@ -58,19 +60,13 @@ DbConnectionManager.prototype.getConnection = function(name) {
 }.future();
 
 DbConnectionManager.prototype.getIndex = function(name) {
-    //var future = new Future();
     try {
-        var ind = _.indexOf(this.aliases, name);
-        //future.return(ind);
-        return ind;
+        return  _.indexOf(this.aliases, name);
     }
     catch(e) {
-        //future.return(-1);
         return -1;
     }
-    //return future.wait();
-
-}//.future();
+};
 
 
 DbConnectionManager.prototype.close = function(name) {
@@ -102,22 +98,17 @@ DbConnectionManager.prototype.close = function(name) {
 
 
 DbConnectionManager.prototype.remove = function(ind) {
-    //var future = new Future();
     try {
         if (ind != -1) {
             this.aliases.splice(ind, 1);
             this.connections.splice(ind, 1);
-            //future.return(false);
             return true;
         }
         else
-        //future.return(true);
             return false;
     }
     catch(e) {
-        //future.return(true);
         return false;
 
     }
-    //return future.wait();
-}//.future();
+};
