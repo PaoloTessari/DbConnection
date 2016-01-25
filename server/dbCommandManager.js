@@ -12,7 +12,7 @@ DbCommandManager = function(connection) {
 
 DbCommandManager.prototype.setCommand = function(command) {
   this.command = command;
-}
+};
 
 SqlCommandManager = function(connection, dbTables) {
     DbCommandManager.call(this, connection);
@@ -28,7 +28,7 @@ SqlCommandManager.prototype = Object.create(DbCommandManager.prototype);
 
 SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
     var future = new Future();
-    var sql = ''
+    var sql = '';
     if(action == 'i') {
         var fields =  this.getInsertFields(tableName,doc, false).wait();
 
@@ -98,7 +98,7 @@ SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
 
 SqlCommandManager.prototype.getFilter = function(tableName) {
     return (' WHERE mid = :_id');
-}
+};
 
 // Return list of field as
 // 'fieldName1, fieldName
@@ -107,39 +107,86 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
     var self = this;
 
     var future = new Future();
-    Fiber(function () {
-        var result = '';
-        var field = null;
-        for (var item in doc.o) {
 
-            if (doc.o[item] && doc.o[item].constructor == {}.constructor) {
-                for (var item2 in doc.o[item]) {
-                    field = self.dbTables.field(tableName, item, item2);
-                    // for nested value  linkFieldName is mandatory
-                    if (field && field.linkFieldName && self.isPhysicalFieldName(field.linkFieldName))
-                        result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
-                }
-            }
+    var result = '';
+    var field = null;
+
+    async.forEachOf(doc.o, function (itemValue, item, callback) {
+        if (doc.o[item] && doc.o[item].constructor == {}.constructor && self.isPhysicalFieldName(item)) {
+            async.forEachOf(doc.o[item], function (item2Value, item2, callback) {
+                field = self.dbTables.field(tableName, item, item2);
+                // for nested value  linkFieldName is mandatory
+                if (field && field.linkFieldName && self.isPhysicalFieldName(field.linkFieldName))
+                    result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
+                callback();
+             },
+             function (err) {
+                //console.log('done bb' + item)
+            });
+            callback();
+        }
+
+        else {
+            field = self.dbTables.field(tableName, item);
+            if (field)
+                result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
             else {
-                field = self.dbTables.field(tableName, item);
-                if (field)
-                    result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
-                else {
-                    field = self.dbTables.field(tableName, '$DEF');
-                    if (field != null) {
-                        field = self.dbTables.tableField(tableName, doc.o['defid'], item).wait();
-                        if (field &&  self.isPhysicalFieldName(field.linkFieldName)) {
+                field = self.dbTables.field(tableName, '$DEF');
+                if (field != null) {
+                    self.dbTables.tableField(tableName, doc.o['defid'], item, function(field) {
+                        if (field && self.isPhysicalFieldName(field.linkFieldName)) {
                             result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
                             self.attrFields.push(_.extend({}, field));
                         }
-
-                    }
+                    });
                 }
             }
+            callback();
         }
+
+    },
+    function (err) {
+        //console.log('done bb' + item)
         result = result.slice(0, -1);
         future.return(result);
-    }).run();
+    });
+
+
+    /*
+     Fiber(function () {
+     var result = '';
+     var field = null;
+     for (var item in doc.o) {
+
+     if (doc.o[item] && doc.o[item].constructor == {}.constructor) {
+     for (var item2 in doc.o[item]) {
+     field = self.dbTables.field(tableName, item, item2);
+     // for nested value  linkFieldName is mandatory
+     if (field && field.linkFieldName && self.isPhysicalFieldName(field.linkFieldName))
+     result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
+     }
+     }
+     else {
+     field = self.dbTables.field(tableName, item);
+     if (field)
+     result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
+     else {
+     field = self.dbTables.field(tableName, '$DEF');
+     if (field != null) {
+     field = self.dbTables.tableField(tableName, doc.o['defid'], item).wait();
+     if (field &&  self.isPhysicalFieldName(field.linkFieldName)) {
+     result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
+     self.attrFields.push(_.extend({}, field));
+     }
+
+     }
+     }
+     }
+     }
+     result = result.slice(0, -1);
+     future.return(result);
+     }).run();
+     */
     return future.wait();
 }.future();
 
@@ -159,14 +206,14 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
     var set = _.extend({}, doc.o.$set || doc.o);
     var defid = null;
 
-   self.dbTables.getDefId(tableName, doc.o2['_id'], function(id) {
+    self.dbTables.getDefId(tableName, doc.o2['_id'], function(id) {
        defid = id;
 
        async.forEachOf(set, function (itemValue, item, callback) {
            //var item = item;
-           if (item && item.constructor == {}.constructor && self.isPhysicalFieldName(itemValue)) {
+           if (set[item] && set[item].constructor == {}.constructor && self.isPhysicalFieldName(item)) {
 
-               async.forEachOf(item, function (item2Value, item2, callback) {
+               async.forEachOf(set[item], function (item2Value, item2, callback) {
 
                    field = self.dbTables.field(tableName, item, item2);
                    // for nested value  linkFieldName is mandatory
@@ -176,6 +223,7 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
                }, function (err) {
                    //console.log('done bb' + item)
                });
+               callback();
 
            }
            else {
@@ -194,16 +242,14 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
                        if (field && self.isPhysicalFieldName(field.linkFieldName)) {
                            result += util.format(" %s = :%s,", field.linkFieldName || item, item);
                            self.attrFields.push(_.extend({}, field));
-                           callback();
                        }
-                       else
-                           callback();
+                       callback();
 
                    })
 
                }
                else
-                   callback();
+                  callback();
 
            }
        }, function (err) {
@@ -304,14 +350,14 @@ SqlCommandManager.prototype.getFields = function(tableName, fields) {
 SqlCommandManager.prototype.isPhysicalFieldName = function(fieldName) {
     return true;
 
-}
+};
 
 
 SequelizeCommandManager = function(connection, dbTables) {
     SqlCommandManager.call(this, connection, dbTables);
 
     this.setCommand(new SequelizeCommand(connection));
-}
+};
 
 
 SequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype);
@@ -324,7 +370,7 @@ SequelizeCommandManager.prototype.execSql = function(sql, doc, action) {
       return future.wait();
     }
       catch(e) {
-          console.log(e)
+          console.log(e);
           future.return(false);
           return future.wait();
       }
@@ -335,13 +381,13 @@ SequelizeCommandManager.prototype.isPhysicalFieldName = function(fieldName) {
     return fieldName.toUpperCase().slice(0, 7) != 'DECODE_' &&
         fieldName.toUpperCase().slice(0, 5) != 'CALC_'
 
-}
+};
 
 
 OpSequelizeCommandManager = function(connection, dbTables) {
     SequelizeCommandManager.call(this, connection, dbTables);
 //    this.tableName = '';
-}
+};
 
 OpSequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype);
 
@@ -368,7 +414,7 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
         return future.wait();
     }
     catch(e) {
-        console.log(e)
+        console.log(e);
         future.return(false);
         return future.wait();
 

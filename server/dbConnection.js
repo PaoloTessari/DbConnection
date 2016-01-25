@@ -10,7 +10,6 @@ DbConnection = function( options) {
     this.dbInstance = null;
 };
 
-
 DbConnection.prototype.open = function() {
 };
 
@@ -73,12 +72,10 @@ SequelizeConnection = function(options) {
 
 SequelizeConnection.prototype = Object.create(DbConnection.prototype);
 
-//SequelizeConnection.prototype.open = function(callback) {
 SequelizeConnection.prototype.open = function() {
     var self = this;
     self.dbInstance = new Sequelize(this.options.database, this.options.username, this.options.password, this.options);
 
-     //return future.wait();
     var future = new Future();
     self.dbInstance.authenticate()
         .then(
@@ -115,5 +112,47 @@ SequelizeConnection.prototype.close = function() {
 
 }.future();
 
+KlabDataAccess = {
+    connectionsOptions: {},
+    connections: {},
+
+    setConnections: function (conns) {
+        KlabDataAccess.connectionsOptions = conns;
+    },
+
+    openConnection: function (name, options) {
+        var conn = KlabDataAccess.connections[name.toLowerCase()];
+        if (!conn) {
+            if (['sqlite', 'postgres', 'mssql', 'mysql'].indexOf(options.dialect) > -1) {
+                conn = new SequelizeConnection(options);
+                KlabDataAccess.connections[name.toLowerCase()] = conn;
+            }
+            if (options.dialect == 'oracle') {
+                conn = new OracleConnection(options);
+                KlabDataAccess.connections[name.toLowerCase()] = conn;
+            }
+            if (['link','mongo'].indexOf(options.dialect) > -1) {
+                conn = new MongoConnection(options);
+                KlabDataAccess.connections[name.toLowerCase()] = conn;
+            }
+        }
+        return conn;
+    },
+
+    connectionByName: function (name) {
+        if (!KlabDataAccess.connections[name.toLowerCase()]) {
+            if (KlabDataAccess.connectionsOptions[name.toLowerCase()]) {
+                KlabDataAccess.connections[name.toLowerCase()] =
+                    KlabDataAccess.openConnection(name, KlabDataAccess.connectionsOptions[name.toLowerCase()]);
+                return KlabDataAccess.connections[name.toLowerCase()]
+            }
+            else
+                new Meteor.Error('Connection ' + name + ' not found!')
+        }
+        else
+            return KlabDataAccess.connections[name.toLowerCase()];
+    }
+
+};
 
 

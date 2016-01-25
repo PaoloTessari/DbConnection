@@ -10,7 +10,7 @@ DbConnectionManager = function(settingConnections) {
 };
 
 
-/*
+
 DbConnectionManager.prototype.getConnectionString = function(alias) {
 
     if(this.settings[alias].dialect == 'mongo') {
@@ -21,7 +21,7 @@ DbConnectionManager.prototype.getConnectionString = function(alias) {
 
 
 };
-*/
+
 
 DbConnectionManager.prototype.open = function(alias, callback) {
 

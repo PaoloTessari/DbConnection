@@ -14,12 +14,6 @@
     "date-format-lite": {
       "version": "0.7.4"
     },
-    "fibers": {
-      "version": "1.0.5"
-    },
-    "future": {
-      "version": "2.3.1"
-    },
     "mongodb": {
       "version": "2.0.48",
       "dependencies": {

@@ -19,8 +19,6 @@ Npm.depends({
     "tedious": "1.13.1",
     "pg": "4.4.3",
     "pg-hstore": "2.3.2",
-    "fibers": "1.0.5",
-    "future": "2.3.1",
     "date-format-lite": "0.7.4",
     "async" : "1.5.2"
 });
@@ -31,7 +29,7 @@ Package.onUse(function(api) {
   api.use("underscore", "server");
   api.addFiles("server/dbCommand.js");
   api.addFiles("server/dbCommandManager.js");
-  api.addFiles("server/dbConnection.js")
+  api.addFiles("server/dbConnection.js");
   api.addFiles("server/dbConnectionManager.js");
   api.addFiles("server/dbTable.js");
   api.export("DbConnectionManager", "server");
