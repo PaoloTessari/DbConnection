@@ -32,8 +32,6 @@ SqlCommandManager.prototype.prepareSql = function(tableName, doc, action) {
     if(action == 'i') {
         var fields =  this.getInsertFields(tableName,doc, false).wait();
 
-        //console.log('fields:'+fields)
-        // no fields to write in sql table
         if(fields == '')
             future.return( '');
 
@@ -114,7 +112,7 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
     async.forEachOf(doc.o, function (itemValue, item, callback) {
         if (doc.o[item] && doc.o[item].constructor == {}.constructor && self.isPhysicalFieldName(item)) {
             async.forEachOf(doc.o[item], function (item2Value, item2, callback) {
-                field = self.dbTables.field(tableName, item, item2);
+                field = self.dbTables.getField(tableName, item, item2);
                 // for nested value  linkFieldName is mandatory
                 if (field && field.linkFieldName && self.isPhysicalFieldName(field.linkFieldName))
                     result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
@@ -127,13 +125,13 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
         }
 
         else {
-            field = self.dbTables.field(tableName, item);
+            field = self.dbTables.getField(tableName, item);
             if (field)
                 result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
             else {
-                field = self.dbTables.field(tableName, '$DEF');
+                field = self.dbTables.getField(tableName, '$DEF');
                 if (field != null) {
-                    self.dbTables.tableField(tableName, doc.o['defid'], item, function(field) {
+                    self.dbTables.getAttrField(tableName, doc.o['defid'], item, function(field) {
                         if (field && self.isPhysicalFieldName(field.linkFieldName)) {
                             result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
                             self.attrFields.push(_.extend({}, field));
@@ -152,41 +150,7 @@ SqlCommandManager.prototype.getInsertFields = function (tableName,doc, asParam) 
     });
 
 
-    /*
-     Fiber(function () {
-     var result = '';
-     var field = null;
-     for (var item in doc.o) {
 
-     if (doc.o[item] && doc.o[item].constructor == {}.constructor) {
-     for (var item2 in doc.o[item]) {
-     field = self.dbTables.field(tableName, item, item2);
-     // for nested value  linkFieldName is mandatory
-     if (field && field.linkFieldName && self.isPhysicalFieldName(field.linkFieldName))
-     result += asParam ? ':' + item + '_' + item2 + ',' : field.linkFieldName + ',';
-     }
-     }
-     else {
-     field = self.dbTables.field(tableName, item);
-     if (field)
-     result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
-     else {
-     field = self.dbTables.field(tableName, '$DEF');
-     if (field != null) {
-     field = self.dbTables.tableField(tableName, doc.o['defid'], item).wait();
-     if (field &&  self.isPhysicalFieldName(field.linkFieldName)) {
-     result += asParam ? ':' + item + ',' : (field.linkFieldName || item) + ',';
-     self.attrFields.push(_.extend({}, field));
-     }
-
-     }
-     }
-     }
-     }
-     result = result.slice(0, -1);
-     future.return(result);
-     }).run();
-     */
     return future.wait();
 }.future();
 
@@ -198,7 +162,6 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
     var self = this;
 
     //var set = _.extend({}, doc.o.$set || doc.o);
-
 
     var future = new Future();
     var result = '';
@@ -215,7 +178,7 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
 
                async.forEachOf(set[item], function (item2Value, item2, callback) {
 
-                   field = self.dbTables.field(tableName, item, item2);
+                   field = self.dbTables.getField(tableName, item, item2);
                    // for nested value  linkFieldName is mandatory
                    if (field && field.linkFieldName && self.isPhysicalFieldName(field.linkFieldName))
                        result += util.format(" %s = :%s,", field.linkFieldName, item + '_' + item2);
@@ -227,18 +190,13 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
 
            }
            else {
-               field = self.dbTables.field(tableName, item);
+               field = self.dbTables.getField(tableName, item);
                if (field && self.isPhysicalFieldName(field.linkFieldName || item)) {
                    result += util.format(" %s = :%s,", field.linkFieldName || item, item);
                    callback();
                }
                else if (defid) {
-
-                   //field = self.dbTables.field(tableName, '$DEF');
-                   //if(field != null) {
-
-                   //field = self.dbTables.tableField(tableName, defid, item).wait();
-                   self.dbTables.tableField(tableName, defid, item, function (field) {
+                   self.dbTables.getAttrField(tableName, defid, item, function (field) {
                        if (field && self.isPhysicalFieldName(field.linkFieldName)) {
                            result += util.format(" %s = :%s,", field.linkFieldName || item, item);
                            self.attrFields.push(_.extend({}, field));
@@ -246,7 +204,6 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
                        callback();
 
                    })
-
                }
                else
                   callback();
@@ -259,99 +216,15 @@ SqlCommandManager.prototype.getUpdateFields = function (tableName,doc) {
            future.return(result);
        });
    });
-/*
-    Fiber(function () {
-        var result = '';
-        var field;
-        var set = _.extend({}, doc.o.$set || doc.o);
-        var defid = null;
 
-        if(self.dbTables.field(tableName, '$DEF') != null) {
-            console.log( doc.o2['_id']);
-            defid = self.dbTables.getDefId(tableName, doc.o2['_id']).wait();
-            console.log('defid' + defid);
-        }
-        for (var item in set) {
-
-            if(set[item] && set[item].constructor == {}.constructor) {
-                for (var item2 in set[item]) {
-                    field = self.dbTables.field(tableName, item, item2);
-                    // for nested value  linkFieldName is mandatory
-                    if(field && field.linkFieldName &&  self.isPhysicalFieldName(field.linkFieldName))
-                      result += util.format(" %s = :%s,",field.linkFieldName, item+'_'+item2);
-                }
-            }
-            else {
-                field = self.dbTables.field(tableName, item);
-                if(field && self.isPhysicalFieldName(field.linkFieldName || item))
-                  result += util.format(" %s = :%s,", field.linkFieldName || item, item);
-                else
-                {
-                    //field = self.dbTables.field(tableName, '$DEF');
-                    //if(field != null) {
-                    if(defid) {
-                        field = self.dbTables.tableField(tableName, defid, item).wait();
-                        if(field && self.isPhysicalFieldName(field.linkFieldName)) {
-                            result += util.format(" %s = :%s,", field.linkFieldName || item, item);
-                            self.attrFields.push(_.extend({}, field));
-                        }
-
-                    }
-                }
-            }
-        }
-        if(result != '')
-            result = result.slice(0, -1);
-        future.return(result);
-    }).run();
-*/
     return future.wait();
 }.future();
 
-/*
-SqlCommandManager.prototype.getFields = function(tableName, fields) {
-    var wait = Future.wait;
-    var result = '';
-    var self = this;
-    Fiber(function () {
-        var field;
-        for (var item in fields) {
-            if(fields[item].constructor == {}.constructor) {
-                for(var item2 in fields[item]) {
-                    field = self.dbTables.field(tableName, item, item2).wait();
-                    // for nested value  linkFieldName is mandatory
-                    if(field && field.linkFieldName)
-                        result+= asParam ? ':'+item+'_'+item2+',' : field.linkFieldName+',';
-                }
-            }
-            else {
-                field = self.dbTables.field(tableName, item);
-                if(field)
-                    result += asParam ? ':' + item + ',' : (field.linkFieldName || item)+ ',';
-                else
-                {
-                    field = self.dbTables.field(tableName, '$DEF');
-                    if(field != null) {
-                        field = self.dbTables.tableField(tableName, fields['_id'], item).wait();
-                        if(field)
-                            result += util.format(" %s = :%s,", field.linkFieldName || item, item);
-
-                    }
-                }
-            }
-        }
-    }).run();
-    console.log('end getfields');
-    console.log(result);
-    return result;
-}
-*/
 
 SqlCommandManager.prototype.isPhysicalFieldName = function(fieldName) {
     return true;
 
 };
-
 
 SequelizeCommandManager = function(connection, dbTables) {
     SqlCommandManager.call(this, connection, dbTables);
@@ -394,7 +267,7 @@ OpSequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype)
 
 
 
-OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, action) {
+OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, action, cbInsertSyncDbLog) {
     try {
 
         var self = this;
@@ -408,6 +281,9 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
         if(action != 'd') {
             record = this.dbTables.normalizeRecord(tableName, record, self.attrFields);
         }
+
+        if(cbInsertSyncDbLog)
+          cbInsertSyncDbLog(tableName,sql,record,action).wait();
 
         future.return(this.command.execSql(sql, record, action).wait());
         console.log(sql);
