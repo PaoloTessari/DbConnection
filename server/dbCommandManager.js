@@ -2,6 +2,8 @@ var util = Npm.require("util");
 var Future = Npm.require('fibers/future');
 var Fiber = Npm.require('fibers');
 var async = Npm.require('async');
+var util = Npm.require('util');
+var EventEmitter = Npm.require('events').EventEmitter;
 
 
 DbCommandManager = function(connection) {
@@ -19,7 +21,6 @@ SqlCommandManager = function(connection, dbTables) {
     this.dbTables = dbTables;
     this.attrFields = [];
 //    this.sql = '';
-
 
 };
 
@@ -229,16 +230,21 @@ SqlCommandManager.prototype.isPhysicalFieldName = function(fieldName) {
 SequelizeCommandManager = function(connection, dbTables) {
     SqlCommandManager.call(this, connection, dbTables);
 
+    this.ee = new EventEmitter();
+
     this.setCommand(new SequelizeCommand(connection));
 };
 
 
 SequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype);
 
+
 SequelizeCommandManager.prototype.execSql = function(sql, doc, action) {
     try {
+      var self = this;
       var future = new Future();
 
+      self.ee.emit('beforeExecSql', sql,doc,action);
       future.return(this.command.execSql(sql, doc, action).wait());
       return future.wait();
     }
@@ -262,12 +268,11 @@ OpSequelizeCommandManager = function(connection, dbTables) {
 //    this.tableName = '';
 };
 
-OpSequelizeCommandManager.prototype = Object.create(SqlCommandManager.prototype);
+
+OpSequelizeCommandManager.prototype = Object.create(SequelizeCommandManager.prototype);
 
 
-
-
-OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, action, cbInsertSyncDbLog) {
+OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, action) {
     try {
 
         var self = this;
@@ -282,8 +287,7 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
             record = this.dbTables.normalizeRecord(tableName, record, self.attrFields);
         }
 
-        if(cbInsertSyncDbLog)
-          cbInsertSyncDbLog(tableName,sql,record,action).wait();
+        self.ee.emit('beforeExecSql', tableName, sql,record,action);
 
         future.return(this.command.execSql(sql, record, action).wait());
         console.log(sql);
