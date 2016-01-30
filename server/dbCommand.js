@@ -50,20 +50,20 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
             }
         ).then(function (rec) {
                 //console.log("[OK] execSql: " + sql);
-                future.return(true)
+                future.return(null)
             }, function (err) {
-                console.log("**[KO] execSql: " + err.message+' '+sql);
-                future.return(false)
+                console.log("**[KO] execSql: " + err.message);
+                future.return(err.message)
 
             }).catch(function (err) {
-                console.log("**[KO] execSql: " + err.message+' '+sql);
-                future.return(false);
+                console.log("**[KO] execSql: " + err.message);
+                future.return(err.message);
             });
         return future.wait();
     }
     catch(e) {
         console.log(e);
-        future.return(false);
+        future.return(null);
         return future.wait();
     }
 }.future();
