@@ -31,12 +31,13 @@ Package.onUse(function(api) {
   api.addFiles("server/dbCommandManager.js");
   api.addFiles("server/dbConnection.js");
   api.addFiles("server/dbConnectionManager.js");
-  api.addFiles("server/dbTable.js");
+  api.addFiles("server/dbCollectionUtil.js");
   api.export("DbConnectionManager", "server");
-  api.export("SqlCommandManager", "server");
-  api.export("SequelizeCommandManager", "server");
+  //api.export("SqlCommandManager", "server");
+  //api.export("SequelizeCommandManager", "server");
   api.export("OpSequelizeCommandManager", "server");
-  api.export("DbTables", "server");
+  api.export("DbCollectionUtil", "server");
+    api.export("SequelizeCommand", "server");
 });
 
 /*

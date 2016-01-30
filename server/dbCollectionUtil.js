@@ -6,26 +6,28 @@ var mongo = Npm.require('mongodb');
 
 
 /* settings: Meteor.settings.Def.Collections) */
-DbTables = function(settings, localConnection) {
+DbCollectionUtil = function(settings, localConnection) {
     var self = this;
     this.settings = settings  || {};
     this.localConnection = localConnection;
     this.defColl = null;
 };
 
-DbTables.prototype.init = function() {
-    this.loadDefColl();
-};
+DbCollectionUtil.prototype.init = function() {
+    var future = new Future;
+    future.return(this.loadDefColl().wait());
+    return future.wait();
+}.future();
 
-DbTables.prototype.getTable = function(tableName) {
+DbCollectionUtil.prototype.getTable = function(tableName) {
     return this.settings && this.settings[tableName] ? this.settings[tableName] : null ;
 };
 
-DbTables.prototype.getFields = function(tableName) {
+DbCollectionUtil.prototype.getFields = function(tableName) {
     return this.getTable(tableName).fields ;
 };
 
-DbTables.prototype.getField = function(tableName, fieldName1, fieldName2) {
+DbCollectionUtil.prototype.getField = function(tableName, fieldName1, fieldName2) {
 
     var field =  _.find(this.getTable(tableName).fields, function(field) {
         return (field.fieldName == fieldName1 && fieldName2 == undefined ) ||
@@ -34,7 +36,7 @@ DbTables.prototype.getField = function(tableName, fieldName1, fieldName2) {
      return field;
 };
 
-DbTables.prototype.getDefId = function(tableName,id, callback) {
+DbCollectionUtil.prototype.getDefId = function(tableName,id, callback) {
     if(this.getField(tableName, '$DEF') == null) {
         callback(null);
     }
@@ -48,7 +50,7 @@ DbTables.prototype.getDefId = function(tableName,id, callback) {
     }
 };
 
-DbTables.prototype.getAttrField = function(tableName,defid,fieldName, callback) {
+DbCollectionUtil.prototype.getAttrField = function(tableName,defid,fieldName, callback) {
 
     var self = this;
 
@@ -85,7 +87,7 @@ DbTables.prototype.getAttrField = function(tableName,defid,fieldName, callback) 
 };
 
 
-DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
+DbCollectionUtil.prototype.normalizeRecord = function(tableName, record, attrFields) {
     var self = this;
     try {
         for (var fieldName in record) {
@@ -128,7 +130,7 @@ DbTables.prototype.normalizeRecord = function(tableName, record, attrFields) {
 
 
 
-DbTables.prototype.normalizeFieldValue = function (field, value) {
+DbCollectionUtil.prototype.normalizeFieldValue = function (field, value) {
     var self = this;
 
     var result = null;
@@ -172,25 +174,30 @@ DbTables.prototype.normalizeFieldValue = function (field, value) {
     }
 };
 
-DbTables.prototype.loadDefColl = function() {
+DbCollectionUtil.prototype.loadDefColl = function() {
      var self = this;
+
+    var future = new Future;
 
      try {
          self.localConnection.dbInstance.collection("def").find({}).toArray(function (err, docs) {
              console.log(err);
              console.log(docs);
              self.defColl = _.extend([], docs);
+             future.return(true);
 
          });
      }
     catch(e) {
         console.log(e);
+        future.return(false);
 
     }
+    return future.wait();
 
- };
+}.future();
 
-DbTables.prototype.getDefDoc = function(_id) {
+DbCollectionUtil.prototype.getDefDoc = function(_id) {
     var self = this;
 
     var doc =  _.find(self.defColl, function(doc) {
@@ -200,7 +207,7 @@ DbTables.prototype.getDefDoc = function(_id) {
 };
 
 /*
-DbTables.prototype.observeLocalDef = function() {
+ DbCollectionUtilloa.prototype.observeLocalDef = function() {
 self = this;
     Meteor.subscribe('def', function() {
         self.query =  self.localConnection.dbInstance.collection("def").find({});

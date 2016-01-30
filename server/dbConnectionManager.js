@@ -4,31 +4,37 @@ var Future = Npm.require('fibers/future');
 
 
 DbConnectionManager = function(settingConnections) {
-    this.connections = [];
-    this.aliases = [];
+    this.connections = {};
+    //this.aliases = [];
     this.settings = settingConnections;
+
+    // private functions
+    /*
+    var getIndex = function(name) {
+        try {
+            return  _.indexOf(this.aliases, name);
+        }
+        catch(e) {
+            return -1;
+        }
+    };
+    */
 };
 
 
-
 DbConnectionManager.prototype.getConnectionString = function(alias) {
-
     if(this.settings[alias].dialect == 'mongo') {
       return 'mongodb://'+this.settings[alias].host+':'+this.settings[alias].port+'/'+this.settings[alias].db;
     }
     else
       return "todo sql connection string"
-
-
 };
 
 
-DbConnectionManager.prototype.open = function(alias, callback) {
-
+DbConnectionManager.prototype.open = function(alias) {
     var self = this;
     var future = new Future();
 
-    console.log(this.settings[alias]);
     var conn = null;
     if(self.settings[alias].dialect == 'mongo') {
         conn = new MongoConnection(self.settings[alias]);
@@ -37,8 +43,8 @@ DbConnectionManager.prototype.open = function(alias, callback) {
         conn = new SequelizeConnection(self.settings[alias]);
     }
 
-    self.connections.push(conn);
-    self.aliases.push(alias);
+    self.connections[alias.toLowerCase()] = conn;
+    //self.aliases.push(alias);
 
     future.return( conn.open().wait());
     return future.wait();
@@ -46,19 +52,23 @@ DbConnectionManager.prototype.open = function(alias, callback) {
 }.future();
 
 
-DbConnectionManager.prototype.getConnection = function(name) {
+DbConnectionManager.prototype.get = function(alias) {
     var self = this;
     var future = new Future();
+    /*
     var ind = _.indexOf(self.aliases, name);
     if(ind != -1) {
         future.return(self.connections[ind]);
     }
     else
         future.return(null);
+    */
+    future.return(self.connections[alias.toLowerCase()]);
     return future.wait();
 
 }.future();
 
+/*
 DbConnectionManager.prototype.getIndex = function(name) {
     try {
         return  _.indexOf(this.aliases, name);
@@ -67,36 +77,57 @@ DbConnectionManager.prototype.getIndex = function(name) {
         return -1;
     }
 };
+*/
 
 
-DbConnectionManager.prototype.close = function(name) {
+DbConnectionManager.prototype.close = function(alias) {
     var self = this;
 
     var future = new Future();
-    var ind = self.getIndex(name);
-    if(ind != -1) {
+
+    var conn = self.connections[alias.toLowerCase()];
+    if(conn != null) {
         try {
-            self.connections[ind].close().resolve(function() {
-                self.remove(ind);
+            self.connections[ind].close().resolve(function () {
                 future.return(true);
             });
         }
         catch(e) {
             console.log(e);
             future.return(false);
-
         }
     }
     else {
-        console.log(name+ 'is not a valid connection');
+        console.log(alias+ 'is not a valid connection');
         future.return(false);
     }
+
+        /*
+        var ind = getIndex(name);
+        if(ind != -1) {
+            try {
+                self.connections[ind].close().resolve(function() {
+                    self.remove(ind);
+                    future.return(true);
+                });
+            }
+            catch(e) {
+                console.log(e);
+                future.return(false);
+
+            }
+        }
+        else {
+            console.log(name+ 'is not a valid connection');
+            future.return(false);
+        }
+        */
 
     return future.wait();
 
 }.future();
 
-
+/*
 DbConnectionManager.prototype.remove = function(ind) {
     try {
         if (ind != -1) {
@@ -112,3 +143,4 @@ DbConnectionManager.prototype.remove = function(ind) {
 
     }
 };
+*/

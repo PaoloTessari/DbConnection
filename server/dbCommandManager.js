@@ -302,7 +302,22 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
 }.future();
 
 
+OpSequelizeCommandManager.prototype.prepareRecord = function(tableName, doc, action) {
+    var self = this;
 
+    var future = new Future();
+    var record =  action == 'u' ? _.extend({}, doc.o.$set || doc.o)  : _.extend({}, doc.o);
+    if( action == 'u')
+        record['_id'] = doc.o2['_id'].toString();
+    else if(action == 'd')
+        record['_id'] = doc.o['_id'].toString();
+
+    if(action != 'd') {
+        record = this.dbTables.normalizeRecord(tableName, record, self.attrFields);
+    }
+    future.return(record);
+    return future.wait();
+}.future();
 
 
 
