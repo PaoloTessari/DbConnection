@@ -52,18 +52,22 @@ SequelizeCommand.prototype.execSql = function(sql, replacements, action) {
                 //console.log("[OK] execSql: " + sql);
                 future.return(null)
             }, function (err) {
-                console.log("**[KO] execSql: " + err.message);
-                future.return(err.message)
+                //console.log("**[KO] execSql: " + err.message);
+                console.log(err);
+                future.return(new DbError(err.name, err.message));
 
             }).catch(function (err) {
-                console.log("**[KO] execSql: " + err.message);
-                future.return(err.message);
+                //console.log("**[KO] execSql: " + err.message);
+                console.log(err);
+                future.return(new DbError(err.name, err.message));
             });
         return future.wait();
     }
     catch(e) {
         console.log(e);
-        future.return(null);
+        future.return(new DbError(("sequelizeCommandError", e.message)));
         return future.wait();
     }
 }.future();
+
+

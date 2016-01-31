@@ -3,6 +3,7 @@
 var Future = Npm.require('fibers/future');
 
 
+
 DbConnectionManager = function(settingConnections) {
     this.connections = {};
     //this.aliases = [];
@@ -33,18 +34,21 @@ DbConnectionManager.prototype.getConnectionString = function(alias) {
 
 DbConnectionManager.prototype.open = function(alias) {
     var self = this;
+
+
     var future = new Future();
 
-    var conn = null;
-    if(self.settings[alias].dialect == 'mongo') {
-        conn = new MongoConnection(self.settings[alias]);
-    }
-    else {
-        conn = new SequelizeConnection(self.settings[alias]);
-    }
+    var conn = self.get(alias).wait();
+    if(!conn) {
+        if (self.settings[alias].dialect == 'mongo') {
+            conn = new MongoConnection(self.settings[alias]);
+        }
+        else {
+            conn = new SequelizeConnection(self.settings[alias]);
+        }
 
-    self.connections[alias.toLowerCase()] = conn;
-    //self.aliases.push(alias);
+        self.connections[alias.toLowerCase()] = conn;
+    }
 
     future.return( conn.open().wait());
     return future.wait();
@@ -144,3 +148,15 @@ DbConnectionManager.prototype.remove = function(ind) {
     }
 };
 */
+
+DbError = function(name, message) {
+    this.name = name;
+    this.message = message;
+};
+
+DbError.prototype.connectionRefused = function() {
+    return this.name.toLowerCase() == "sequelizeconnectionerror";
+};
+
+
+

@@ -74,6 +74,7 @@ SequelizeConnection.prototype = Object.create(DbConnection.prototype);
 
 SequelizeConnection.prototype.open = function() {
     var self = this;
+    self.dbInstance = null;
     self.dbInstance = new Sequelize(this.options.database, this.options.username, this.options.password, this.options);
 
     var future = new Future();

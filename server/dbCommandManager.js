@@ -263,6 +263,7 @@ SequelizeCommandManager.prototype.isPhysicalFieldName = function(fieldName) {
 };
 
 
+
 OpSequelizeCommandManager = function(connection, dbTables) {
     SequelizeCommandManager.call(this, connection, dbTables);
 //    this.tableName = '';
@@ -273,10 +274,12 @@ OpSequelizeCommandManager.prototype = Object.create(SequelizeCommandManager.prot
 
 
 OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, action) {
+    var self = this;
     try {
+        var record = self.prepareRecord(tableName,doc,action).wait();
 
-        var self = this;
         var future = new Future();
+        /*
         var record =  action == 'u' ? _.extend({}, doc.o.$set || doc.o)  : _.extend({}, doc.o);
         if( action == 'u')
             record['_id'] = doc.o2['_id'].toString();
@@ -286,6 +289,7 @@ OpSequelizeCommandManager.prototype.execSql = function(sql, tableName, doc, acti
         if(action != 'd') {
             record = this.dbTables.normalizeRecord(tableName, record, self.attrFields);
         }
+        */
 
         self.ee.emit('beforeExecSql', tableName, sql,record,action);
 
